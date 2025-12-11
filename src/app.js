@@ -11,17 +11,18 @@ const formsRoutes = require('./routes/form');
 const app = express();
 
 
-
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-
 // Static file serving for exports and uploads
 app.use('/exports', express.static(path.join(__dirname, '../exports')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Serve frontend files
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 
