@@ -265,7 +265,7 @@
   </div>
 
   <script>
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
     const authToken = localStorage.getItem('authToken');
     const urlParams = new URLSearchParams(window.location.search);
     const formId = urlParams.get('id');
@@ -490,7 +490,7 @@
     // Download batch file
     function downloadBatch() {
       if (currentForm && currentForm.batchFileUrl) {
-        const downloadUrl = `http://localhost:5000${currentForm.batchFileUrl}`;
+        const downloadUrl = `https://verisage-evolution.onrender.com${currentForm.batchFileUrl}`;
         window.open(downloadUrl, '_blank');
       }
     }
