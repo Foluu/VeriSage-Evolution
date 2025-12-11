@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriSage Evolution</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" 
+      integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" 
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: #f5f6fa;
+    }
+
+    header {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header-left h1 {
+      font-size: 1.5rem;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .tabs {
+      display: flex;
+      background: white;
+      padding: 0.5rem 2rem;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .tab {
+      margin: 0 1rem;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+
+    .tab:hover:not(.active) {
+      background: #f0f0f0;
+    }
+
+    .controls {
+      padding: 1rem 2rem;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .search-bar input {
+      padding: 0.75rem 1rem;
+      width: 300px;
+      border-radius: 5px;
+      border: 2px solid #e0e0e0;
+      font-size: 1rem;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #f26522;
+    }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .stat-item {
+      padding: 0.5rem 1rem;
+      background: #f8f9fa;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+
+    .stat-item strong {
+      color: #f26522;
+    }
+
+    table {
+      width: calc(100% - 4rem);
+      margin: 1rem 2rem;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    thead {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    th {
+      font-weight: 600;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .status {
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-block;
+    }
+
+    .status.unreviewed {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status.reviewed {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .status.posted {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      color: #ddd;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #f26522;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+      margin: 1rem 2rem;
+      padding: 1rem;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #f5c6cb;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #c3e6cb;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .search-bar input {
+        width: 100%;
+      }
+
+      table {
+        font-size: 0.9rem;
+      }
+
+      th, td {
+        padding: 0.75rem 0.5rem;
+      }
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <header>
+    <div class="header-left">
+      <h1><i class="fas fa-chart-line"></i> VeriSage Evolution</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+        <span id="userName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-filter="all">
+      <i class="fas fa-inbox"></i> All Forms
+    </div>
+    <div class="tab" data-filter="unreviewed">
+      <i class="fas fa-exclamation-circle"></i> Unreviewed
+    </div>
+    <div class="tab" data-filter="reviewed">
+      <i class="fas fa-edit"></i> Reviewed
+    </div>
+    <div class="tab" data-filter="posted">
+      <i class="fas fa-check-circle"></i> Posted
+    </div>
+  </div>
+
+  <div id="alertBox" class="alert"></div>
+
+  <div class="controls">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Search by branch, email, pastor..." />
+    </div>
+    <div class="stats">
+      <div class="stat-item">
+        Total: <strong id="totalCount">0</strong>
+      </div>
+      <div class="stat-item">
+        Unreviewed: <strong id="unreviewedCount">0</strong>
+      </div>
+      <div class="stat-item">
+        Posted: <strong id="postedCount">0</strong>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="tableContainer">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Branch</th>
+          <th>Month</th>
+          <th>Email</th>
+          <th>Pastor</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="formTable">
+        <tr>
+          <td colspan="7">
+            <div class="loading">
+              <div class="loader"></div>
+              <p>Loading forms...</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+
+  <script>
+    const API_BASE_URL = 'http://localhost:5000/api';
+    let authToken = localStorage.getItem('authToken');
+    let currentFilter = 'all';
+    let allForms = [];
+
+    // Check authentication
+    function checkAuth() {
+      if (!authToken) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = `alert ${type} show`;
+      
+      setTimeout(() => {
+        alertBox.classList.remove('show');
+      }, 5000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    // Load user info
+    async function loadUserInfo() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          document.getElementById('userName').textContent = result.user.name;
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+      }
+    }
+
+    // Load forms
+    async function loadForms(status = 'all') {
+      currentFilter = status;
+      
+      const url = status === 'all' 
+        ? `${API_BASE_URL}/forms`
+        : `${API_BASE_URL}/forms?status=${status}`;
+      
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (response.status === 401) {
+          logout();
+          return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+          allForms = result.data;
+          displayForms(allForms);
+          updateStats();
+        } else {
+          showAlert(result.message || 'Failed to load forms');
+        }
+
+      } catch (error) {
+        console.error('Error loading forms:', error);
+        showAlert('Network error. Please check your connection.');
+      }
+    }
+
+    // Display forms in table
+    function displayForms(forms) {
+      const tbody = document.getElementById('formTable');
+      
+      if (forms.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No forms found</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = forms.map(form => {
+        const date = new Date(form.submittedAt).toLocaleDateString();
+        const statusClass = form.status.toLowerCase();
+        
+        return `
+          <tr onclick="viewForm('${form._id}')">
+            <td>${date}</td>
+            <td><strong>${form.branch}</strong></td>
+            <td>${form.month}</td>
+            <td>${form.officialEmail || 'N/A'}</td>
+            <td>${form.residentPastor || 'N/A'}</td>
+            <td><span class="status ${statusClass}">${form.status}</span></td>
+            <td>
+              <button onclick="viewForm('${form._id}'); event.stopPropagation();" 
+                      style="background: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+                View
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Update statistics
+    async function updateStats() {
+      try {
+        const [allRes, unrevRes, postRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/forms`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          }),
+          fetch(`${API_BASE_URL}/forms?status=unreviewed`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          }),
+          fetch(`${API_BASE_URL}/forms?status=posted`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          })
+        ]);
+
+        const [allData, unrevData, postData] = await Promise.all([
+          allRes.json(),
+          unrevRes.json(),
+          postRes.json()
+        ]);
+
+        document.getElementById('totalCount').textContent = allData.pagination?.total || 0;
+        document.getElementById('unreviewedCount').textContent = unrevData.pagination?.total || 0;
+        document.getElementById('postedCount').textContent = postData.pagination?.total || 0;
+
+      } catch (error) {
+        console.error('Error updating stats:', error);
+      }
+    }
+
+    // View form details
+    function viewForm(formId) {
+      window.location.href = `detail.html?id=${formId}`;
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      
+      const filtered = allForms.filter(form => {
+        return form.branch.toLowerCase().includes(searchTerm) ||
+               (form.officialEmail && form.officialEmail.toLowerCase().includes(searchTerm)) ||
+               (form.residentPastor && form.residentPastor.toLowerCase().includes(searchTerm)) ||
+               form.month.toLowerCase().includes(searchTerm);
+      });
+      
+      displayForms(filtered);
+    });
+
+    // Tab filtering
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const filter = tab.dataset.filter;
+        loadForms(filter);
+        
+        // Clear search
+        document.getElementById('searchInput').value = '';
+      });
+    });
+
+    // Initialize
+    if (checkAuth()) {
+      loadUserInfo();
+      loadForms();
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      if (checkAuth()) {
+        loadForms(currentFilter);
+      }
+    }, 30000);
+
+  </script>
+
+</body>
+</html>
+

@@ -1,0 +1,409 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - VeriSage Evolution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: black;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(to right, #FFA000, #f26522);
+            padding: 60px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-left h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-left p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .login-right {
+            flex: 1;
+            padding: 60px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #666;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #f26522;
+        }
+
+        .input-group input.error {
+            border-color: #e74c3c;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #FFA000, #f26522);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(242, 101, 34, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease infinite;
+        }
+
+    
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert.success {
+            background-color: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                padding: 40px 30px;
+            }
+
+            .login-right {
+                padding: 40px 30px;
+            }
+
+            .login-left h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="login-container">
+
+        <div class="login-left">
+            <h1>VeriSage Evolution</h1>
+            <p>TREM's Finance Report Management System</p>
+            <p style="margin-top: 2rem; font-size: 0.9rem;">
+                This middleware was created by Lychee Tech for TREM. For the reviewing synchronization and automation of their branch financial reports with Sage 200 Evolution.
+            </p>
+        </div>
+
+        <div class="login-right">
+            <div class="login-header">
+                <h2>HQ Login</h2>
+                <p>Access your dashboard</p>
+            </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Enter your username"
+                        required
+                    >
+                    <div id="usernameError" class="error-message"></div>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter your password"
+                        required
+                    >
+                    <div id="passwordError" class="error-message"></div>
+                </div>
+
+                <button type="submit" class="login-button" id="loginButton">
+                    <span id="buttonText">Login</span>
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+
+    
+    <!-- <footer class="text-center">
+        <small class="text-muted">&copy; 2025 Lychee Tech. 
+            <br> All rights reserved.</small>
+    </footer> -->
+
+
+
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Get form elements
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const buttonText = document.getElementById('buttonText');
+        const alertBox = document.getElementById('alertBox');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        // Show alert message
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert ${type} show`;
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        // Show field error
+        function showFieldError(fieldId, message) {
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            const input = document.getElementById(fieldId);
+            
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            input.classList.add('error');
+        }
+
+        // Clear field error
+        function clearFieldError(fieldId) {
+            const errorDiv = document.getElementById(`${fieldId}Error`);
+            const input = document.getElementById(fieldId);
+            
+            errorDiv.classList.remove('show');
+            input.classList.remove('error');
+        }
+
+        // Clear all errors
+        function clearAllErrors() {
+            clearFieldError('username');
+            clearFieldError('password');
+            alertBox.classList.remove('show');
+        }
+
+        // Check if already logged in
+        function checkExistingLogin() {
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                // Redirect to dashboard
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            // Clear previous errors
+            clearAllErrors();
+            
+            // Get form values
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            
+            // Validate
+            if (!username) {
+                showFieldError('username', 'Username is required');
+                return;
+            }
+            
+            if (!password) {
+                showFieldError('password', 'Password is required');
+                return;
+            }
+            
+            // Disable button and show loader
+            loginButton.disabled = true;
+            buttonText.innerHTML = '<span class="loader"></span>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Store token and user info
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Show success message
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                    
+                } else {
+                    // Show error message
+                    showAlert(data.message || 'Login failed. Please try again.');
+                    
+                    // Re-enable button
+                    loginButton.disabled = false;
+                    buttonText.textContent = 'Login';
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Network error. Please check your connection and try again.');
+                
+                // Re-enable button
+                loginButton.disabled = false;
+                buttonText.textContent = 'Login';
+            }
+        }
+
+        // Clear field errors on input
+        usernameInput.addEventListener('input', () => clearFieldError('username'));
+        passwordInput.addEventListener('input', () => clearFieldError('password'));
+
+        // Attach form submit handler
+        loginForm.addEventListener('submit', handleLogin);
+
+        // Check for existing login on page load
+        checkExistingLogin();
+    </script>
+
+
+</body>
+</html>

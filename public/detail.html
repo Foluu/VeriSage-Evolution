@@ -1,0 +1,540 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Details - VeriSage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body { 
+      font-family: 'Poppins', Arial, sans-serif; 
+      background: #f5f6fa; 
+    }
+    
+    header {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 2rem auto; 
+      padding: 0 2rem; 
+    }
+    
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .card-header h2 {
+      color: #333;
+      font-size: 1.5rem;
+    }
+    
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .status-badge.unreviewed {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-badge.reviewed {
+      background: #cce5ff;
+      color: #004085;
+    }
+    
+    .status-badge.posted {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .field-group { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+      gap: 1.5rem; 
+      margin: 1.5rem 0; 
+    }
+    
+    .field { 
+      background: #f8f9fa; 
+      padding: 1rem; 
+      border-radius: 8px;
+      border-left: 3px solid #f26522;
+    }
+    
+    .field label { 
+      font-weight: 600; 
+      color: #555; 
+      display: block; 
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+    
+    .field .value { 
+      font-size: 1.1rem; 
+      color: #000;
+      font-weight: 500;
+    }
+    
+    .actions { 
+      margin-top: 2rem; 
+      display: flex; 
+      gap: 1rem; 
+      flex-wrap: wrap;
+    }
+    
+    button { 
+      padding: 0.75rem 1.5rem; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-primary { 
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white; 
+    }
+    
+    .btn-secondary { 
+      background: #6c757d; 
+      color: white; 
+    }
+    
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+    
+    .btn-danger { 
+      background: #dc3545; 
+      color: white; 
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 3rem;
+    }
+    
+    .loader {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #f26522;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+    
+    .alert.show {
+      display: block;
+    }
+    
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #f5c6cb;
+    }
+    
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #c3e6cb;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .summary-card h3 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .summary-card p {
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+
+  </style>
+  
+</head>
+
+<body>
+  <header>
+    <button class="back-btn" onclick="history.back()">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </button>
+    <h1>Form Details</h1>
+    <div></div>
+  </header>
+  
+  <div class="container">
+    <div id="alertBox" class="alert"></div>
+    
+    <div id="formContent">
+      <div class="loading">
+        <div class="loader"></div>
+        <p>Loading form details...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:5000/api';
+    const authToken = localStorage.getItem('authToken');
+    const urlParams = new URLSearchParams(window.location.search);
+    const formId = urlParams.get('id');
+    let currentForm = null;
+
+    // Check auth
+    if (!authToken) {
+      window.location.href = 'login.html';
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = `alert ${type} show`;
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      setTimeout(() => {
+        alertBox.classList.remove('show');
+      }, 5000);
+    }
+
+    // Format currency
+    function formatCurrency(value) {
+      if (!value || value === 0) return '₦0.00';
+      return `₦${parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Load form details
+    async function loadFormDetails() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/${formId}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          currentForm = result.data;
+          displayFormDetails(currentForm);
+        } else {
+          showAlert(result.message || 'Failed to load form');
+        }
+
+      } catch (error) {
+        console.error('Error loading form:', error);
+        showAlert('Network error. Please try again.');
+      }
+    }
+
+    // Calculate totals
+    function calculateTotals(form) {
+      const incomeFields = [
+        'offering', 'tithe', 'seedOffering', 'thanksgiving', 'annualThanksgiving',
+        'buildingProject', 'otherProject', 'crusadeAndMissionary', 'groupMinistryDeposits',
+        'assetDisposal', 'interestIncome', 'loanRepaidByDebtors', 'loanReceived', 'donationReceived'
+      ];
+
+      const expenseFields = [
+        'remittance25Percent', 'remittance5PercentHQ', 'remittance5PercentZonal',
+        'salariesAndAllowances', 'pastorsPension', 'crusadeMissionary', 'parsonageWelfare',
+        'transportAndTravels', 'hotelAndAccommodation', 'donationsGiftsLoveOffering',
+        'entertainmentAndFeeding', 'medicalWelfare', 'churchExpenses', 'officeExpenses',
+        'rentParsonage', 'rentChurchBuilding', 'telephoneInternet', 'electricityLighting',
+        'fuelAndOil', 'licenseDuesSubscriptions', 'security', 'bankCharges', 'groupExpenses',
+        'loanAdvanced', 'loanRepaidToCreditor', 'repairsFurnitureAndFittings', 'repairsEquipment',
+        'repairsMotorVehicles', 'repairsChurchBuilding', 'repairsParsonage', 'building',
+        'motorVehicle', 'generator', 'musicalEquipment', 'asabaProject', 'others'
+      ];
+
+      let totalIncome = 0;
+      let totalExpense = 0;
+
+      incomeFields.forEach(field => {
+        totalIncome += parseFloat(form[field]) || 0;
+      });
+
+      expenseFields.forEach(field => {
+        totalExpense += parseFloat(form[field]) || 0;
+      });
+
+      const balance = totalIncome - totalExpense;
+
+      return { totalIncome, totalExpense, balance };
+    }
+
+    // Display form details
+    function displayFormDetails(form) {
+      const totals = calculateTotals(form);
+      
+      const fields = Object.entries(form)
+        .filter(([key, value]) => 
+          !key.startsWith('_') && 
+          key !== 'status' && 
+          key !== 'batchFileUrl' &&
+          key !== 'createdAt' &&
+          key !== 'updatedAt' &&
+          key !== '__v' &&
+          value !== 0 && 
+          value !== '' && 
+          value !== null
+        )
+        .map(([key, value]) => {
+          let displayValue = value;
+          
+          // Format based on type
+          if (typeof value === 'number') {
+            displayValue = formatCurrency(value);
+          } else if (value instanceof Date || key.includes('At')) {
+            displayValue = new Date(value).toLocaleString();
+          }
+          
+          // Format field name
+          const label = key.replace(/([A-Z])/g, ' $1')
+                           .replace(/^./, str => str.toUpperCase())
+                           .trim();
+          
+          return `
+            <div class="field">
+              <label>${label}</label>
+              <div class="value">${displayValue}</div>
+            </div>
+          `;
+        })
+        .join('');
+
+      const content = `
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-file-invoice"></i> ${form.branch} - ${form.month}</h2>
+            <span class="status-badge ${form.status}">${form.status.toUpperCase()}</span>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+              <h3>${formatCurrency(totals.totalIncome)}</h3>
+              <p>Total Income</p>
+            </div>
+            <div class="summary-card" style="background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);">
+              <h3>${formatCurrency(totals.totalExpense)}</h3>
+              <p>Total Expense</p>
+            </div>
+            <div class="summary-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <h3>${formatCurrency(totals.balance)}</h3>
+              <p>Balance (Petty Cash)</p>
+            </div>
+          </div>
+
+          <div class="field-group">
+            ${fields}
+          </div>
+
+          <div class="actions">
+            ${form.status === 'posted' && form.batchFileUrl ? `
+              <button class="btn-success" onclick="downloadBatch()">
+                <i class="fas fa-download"></i> Download Batch File
+              </button>
+            ` : `
+              <button class="btn-primary" id="generateBtn" onclick="generateBatch()">
+                <i class="fas fa-file-excel"></i> Generate Batch File
+              </button>
+            `}
+            
+            ${form.status !== 'posted' ? `
+              <button class="btn-secondary" onclick="editForm()">
+                <i class="fas fa-edit"></i> Edit Form
+              </button>
+            ` : ''}
+            
+            <button class="btn-danger" onclick="if(confirm('Delete this form?')) deleteForm()">
+              <i class="fas fa-trash"></i> Delete Form
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('formContent').innerHTML = content;
+    }
+
+    // Generate batch file
+    async function generateBatch() {
+      if (!confirm('Generate batch file for Sage 200 Evolution? This will mark the form as POSTED.')) {
+        return;
+      }
+
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader" style="width: 20px; height: 20px; border-width: 2px;"></span> Generating...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/${formId}/post`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert('✅ Batch file generated successfully!', 'success');
+          
+          // Download file
+          window.open(result.data.batchFile.downloadUrl, '_blank');
+          
+          // Reload form details
+          setTimeout(() => {
+            loadFormDetails();
+          }, 1000);
+        } else {
+          showAlert(result.message || 'Failed to generate batch file');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-file-excel"></i> Generate Batch File';
+        }
+
+      } catch (error) {
+        console.error('Error generating batch:', error);
+        showAlert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-file-excel"></i> Generate Batch File';
+      }
+    }
+
+    // Download batch file
+    function downloadBatch() {
+      if (currentForm && currentForm.batchFileUrl) {
+        const downloadUrl = `http://localhost:5000${currentForm.batchFileUrl}`;
+        window.open(downloadUrl, '_blank');
+      }
+    }
+
+    // Edit form
+    function editForm() {
+      // TODO: Implement edit functionality
+      showAlert('Edit functionality coming soon!', 'success');
+    }
+
+    // Delete form
+    async function deleteForm() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/${formId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          showAlert('Form deleted successfully', 'success');
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1500);
+        } else {
+          showAlert('Failed to delete form');
+        }
+
+      } catch (error) {
+        console.error('Error deleting form:', error);
+        showAlert('Network error. Please try again.');
+      }
+    }
+
+    // Load form on page load
+    if (formId) {
+      loadFormDetails();
+    } else {
+      showAlert('No form ID provided');
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 2000);
+    }
+
+  </script>
+
+</body>
+</html>

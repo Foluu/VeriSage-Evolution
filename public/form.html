@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>TREM MONTHLY FINANCE REPORT</title>
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface:400,400i|Roboto+Mono&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: none;
+            outline: none;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .header {
+            display: flex;
+            background-color: white;
+            background-image: url("src/img/headbg.jpg");
+            background-position: center 0px;
+            height: 300px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-header {
+            background: linear-gradient(to right, #FFA000, #f26522);
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+            position: sticky;
+            height: 100px;
+            top: 0;
+            align-items: center;
+        }
+
+        .nav-lists {
+            font-size: 28px;
+            color: white;
+            text-align: center;
+        }
+
+        .container2 {
+            max-width: 67%;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 40px auto;
+            padding-bottom: 40px;
+            border-radius: 12px;
+        }
+
+        h1 {
+            color: rgb(11, 8, 69);
+            font-size: 50px;
+        }
+
+        h4 {
+            text-align: center;
+            padding-top: 50px;
+            font-size: 20px;
+        }
+
+        .Guidelines {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .Guidelines div {
+            margin: 5px 0;
+        }
+
+        .input-box {
+            margin: 20px 30px;
+        }
+
+        .input-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-box input,
+        .input-box select {
+            width: 100%;
+            max-width: 400px;
+            height: 35px;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+            padding: 0 10px;
+            font-size: 1rem;
+        }
+
+        .input-box input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: none;
+        }
+
+        .content1a {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            padding: 0 40px;
+        }
+
+        .choose-file {
+            border: 2px dashed #d0d0d0;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #888;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .choose-file:hover {
+            border-color: #e2720f;
+            color: #555;
+        }
+
+        .choose-file.highlight {
+            border: 2px dashed #4a90e2;
+            background-color: #f0f8ff;
+        }
+
+        button[type="submit"] {
+            width: 20%;
+            min-width: 150px;
+            color: white;
+            height: 50px;
+            border: none;
+            background: linear-gradient(to right, #FFA000, #f26522);
+            font-size: 16px;
+            font-weight: 600;
+            display: block;
+            margin: 40px auto 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background: black;
+            color: #f4611d;
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 20px 40px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content1a {
+                grid-template-columns: 1fr;
+            }
+
+            .container2 {
+                max-width: 95%;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <form id="financeForm" enctype="multipart/form-data">
+        <div class="container">
+            <header class="header">
+                <h1 style="color: white;">CHURCH FINANCE REPORT</h1>
+            </header>
+
+            <header class="nav-header">
+                <h4 class="nav-lists"><b>TREM Monthly Return of Receipts and Payments</b></h4>
+            </header>
+
+            <div class="container2">
+                <div id="alertBox" class="alert"></div>
+
+                <div class="Guidelines">
+                    <h4><u>Guidelines for Completing the Form</u></h4>
+                    <div>1. Kindly complete the form fields below with the appropriate data.</div>
+                    <div>2. For fields that don't apply, leave them empty or input "0"</div>
+                    <div>3. Report MUST be submitted not later than the 15th day of the subsequent month.</div>
+                    <div>(e.g. Report for the month of June is expected not later than 15th of July).</div>
+                    <div>4. Required fields are marked with '*'</div>
+                </div>
+
+                <div class="content1a">
+                    <div class="input-box">
+                        <label for="zone">ZONE</label>
+                        <select id="zone" name="zone">
+                            <option value="">Select Zone</option>
+                            <option value="Headquarters Annex">Headquarters Annex</option>
+                            <option value="Mainland Zone 1">Mainland Zone 1</option>
+                            <option value="Mainland Zone 2">Mainland Zone 2</option>
+                            <option value="Island Zone 1">Island Zone 1</option>
+                            <option value="Island Zone 2">Island Zone 2</option>
+                        </select>
+                    </div>
+
+                    <div class="input-box">
+                        <label for="branch">BRANCH <b>*</b></label>
+                        <input type="text" id="branch" name="branch" placeholder="AJAH" required>
+                    </div>
+
+                    <div class="input-box">
+                        <label for="residentPastor">RESIDENT PASTOR</label>
+                        <input type="text" id="residentPastor" name="residentPastor">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="reportPreparedBy">REPORT PREPARED BY</label>
+                        <input type="text" id="reportPreparedBy" name="reportPreparedBy">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="officialEmail">OFFICIAL EMAIL</label>
+                        <input type="email" id="officialEmail" name="officialEmail" placeholder="example@trem.com">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="month">MONTH <b>*</b></label>
+                        <select id="month" name="month" required>
+                            <option value="">Select Month</option>
+                            <option value="JANUARY">JANUARY</option>
+                            <option value="FEBRUARY">FEBRUARY</option>
+                            <option value="MARCH">MARCH</option>
+                            <option value="APRIL">APRIL</option>
+                            <option value="MAY">MAY</option>
+                            <option value="JUNE">JUNE</option>
+                            <option value="JULY">JULY</option>
+                            <option value="AUGUST">AUGUST</option>
+                            <option value="SEPTEMBER">SEPTEMBER</option>
+                            <option value="OCTOBER">OCTOBER</option>
+                            <option value="NOVEMBER">NOVEMBER</option>
+                            <option value="DECEMBER">DECEMBER</option>
+                        </select>
+                    </div>
+
+                    <!-- Income Fields -->
+                    <div class="input-box">
+                        <label for="offering">OFFERING</label>
+                        <input type="number" id="offering" name="offering" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="tithe">TITHE</label>
+                        <input type="number" id="tithe" name="tithe" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="seedOffering">SEED OFFERING</label>
+                        <input type="number" id="seedOffering" name="seedOffering" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="thanksgiving">THANKSGIVING</label>
+                        <input type="number" id="thanksgiving" name="thanksgiving" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="annualThanksgiving">ANNUAL THANKSGIVING</label>
+                        <input type="number" id="annualThanksgiving" name="annualThanksgiving" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="buildingProject">BUILDING PROJECT</label>
+                        <input type="number" id="buildingProject" name="buildingProject" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="otherProject">OTHER PROJECT</label>
+                        <input type="number" id="otherProject" name="otherProject" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="crusadeAndMissionary">CRUSADE & MISSIONARY</label>
+                        <input type="number" id="crusadeAndMissionary" name="crusadeAndMissionary" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="groupMinistryDeposits">GROUP/MINISTRY DEPOSITS</label>
+                        <input type="number" id="groupMinistryDeposits" name="groupMinistryDeposits" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="assetDisposal">ASSET DISPOSAL</label>
+                        <input type="number" id="assetDisposal" name="assetDisposal" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="interestIncome">INTEREST INCOME</label>
+                        <input type="number" id="interestIncome" name="interestIncome" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="loanRepaidByDebtors">LOAN REPAID BY DEBTORS</label>
+                        <input type="number" id="loanRepaidByDebtors" name="loanRepaidByDebtors" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="loanReceived">LOAN RECEIVED</label>
+                        <input type="number" id="loanReceived" name="loanReceived" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="donationReceived">DONATION RECEIVED</label>
+                        <input type="number" id="donationReceived" name="donationReceived" step="0.01">
+                    </div>
+
+                    <!-- Expense Fields -->
+                    <div class="input-box">
+                        <label for="remittance25Percent">25% REMITTANCE TO NATIONAL OFFICE</label>
+                        <input type="number" id="remittance25Percent" name="remittance25Percent" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="remittance5PercentHQ">5% HEADQUARTERS BUILDING</label>
+                        <input type="number" id="remittance5PercentHQ" name="remittance5PercentHQ" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="remittance5PercentZonal">5% REMITTANCE TO ZONAL HEADQUARTERS</label>
+                        <input type="number" id="remittance5PercentZonal" name="remittance5PercentZonal" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="salariesAndAllowances">SALARIES & ALLOWANCES</label>
+                        <input type="number" id="salariesAndAllowances" name="salariesAndAllowances" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="pastorsPension">PASTOR'S PENSION</label>
+                        <input type="number" id="pastorsPension" name="pastorsPension" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="crusadeMissionary">CRUSADE/MISSIONARY</label>
+                        <input type="number" id="crusadeMissionary" name="crusadeMissionary" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="parsonageWelfare">PARSONAGE WELFARE</label>
+                        <input type="number" id="parsonageWelfare" name="parsonageWelfare" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="transportAndTravels">TRANSPORT & TRAVELS</label>
+                        <input type="number" id="transportAndTravels" name="transportAndTravels" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="hotelAndAccommodation">HOTEL & ACCOMMODATION</label>
+                        <input type="number" id="hotelAndAccommodation" name="hotelAndAccommodation" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="donationsGiftsLoveOffering">DONATIONS/GIFTS/LOVE OFFERING/CHARITY</label>
+                        <input type="number" id="donationsGiftsLoveOffering" name="donationsGiftsLoveOffering" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="entertainmentAndFeeding">ENTERTAINMENT & FEEDING</label>
+                        <input type="number" id="entertainmentAndFeeding" name="entertainmentAndFeeding" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="medicalWelfare">MEDICAL/WELFARE</label>
+                        <input type="number" id="medicalWelfare" name="medicalWelfare" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="churchExpenses">CHURCH EXPENSES</label>
+                        <input type="number" id="churchExpenses" name="churchExpenses" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="officeExpenses">OFFICE EXPENSES</label>
+                        <input type="number" id="officeExpenses" name="officeExpenses" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="rentParsonage">RENT - PARSONAGE</label>
+                        <input type="number" id="rentParsonage" name="rentParsonage" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="rentChurchBuilding">RENT - CHURCH BUILDING</label>
+                        <input type="number" id="rentChurchBuilding" name="rentChurchBuilding" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="telephoneInternet">TELEPHONE/INTERNET</label>
+                        <input type="number" id="telephoneInternet" name="telephoneInternet" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="electricityLighting">ELECTRICITY/LIGHTING</label>
+                        <input type="number" id="electricityLighting" name="electricityLighting" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="fuelAndOil">FUEL & OIL</label>
+                        <input type="number" id="fuelAndOil" name="fuelAndOil" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="licenseDuesSubscriptions">LICENSE, DUES & SUBSCRIPTIONS</label>
+                        <input type="number" id="licenseDuesSubscriptions" name="licenseDuesSubscriptions" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="security">SECURITY</label>
+                        <input type="number" id="security" name="security" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="bankCharges">BANK CHARGES</label>
+                        <input type="number" id="bankCharges" name="bankCharges" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="groupExpenses">GROUP EXPENSES</label>
+                        <input type="number" id="groupExpenses" name="groupExpenses" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="loanAdvanced">LOAN ADVANCED</label>
+                        <input type="number" id="loanAdvanced" name="loanAdvanced" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="loanRepaidToCreditor">LOAN REPAID TO CREDITOR</label>
+                        <input type="number" id="loanRepaidToCreditor" name="loanRepaidToCreditor" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="repairsFurnitureAndFittings">REPAIRS & MAINTENANCE - FURNITURE & FITTINGS</label>
+                        <input type="number" id="repairsFurnitureAndFittings" name="repairsFurnitureAndFittings" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="repairsEquipment">REPAIRS & MAINTENANCE - EQUIPMENT</label>
+                        <input type="number" id="repairsEquipment" name="repairsEquipment" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="repairsMotorVehicles">REPAIRS & MAINTENANCE - MOTOR VEHICLES</label>
+                        <input type="number" id="repairsMotorVehicles" name="repairsMotorVehicles" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="repairsChurchBuilding">REPAIRS & MAINTENANCE - CHURCH BUILDING</label>
+                        <input type="number" id="repairsChurchBuilding" name="repairsChurchBuilding" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="repairsParsonage">REPAIRS & MAINTENANCE - PARSONAGE</label>
+                        <input type="number" id="repairsParsonage" name="repairsParsonage" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="building">BUILDING</label>
+                        <input type="number" id="building" name="building" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="motorVehicle">MOTOR VEHICLE</label>
+                        <input type="number" id="motorVehicle" name="motorVehicle" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="generator">GENERATOR</label>
+                        <input type="number" id="generator" name="generator" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="musicalEquipment">MUSICAL EQUIPMENT</label>
+                        <input type="number" id="musicalEquipment" name="musicalEquipment" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="asabaProject">ASABA PROJECT</label>
+                        <input type="number" id="asabaProject" name="asabaProject" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="others">OTHERS</label>
+                        <input type="number" id="others" name="others" step="0.01">
+                    </div>
+
+                    <div class="input-box">
+                        <label for="confirmationOfPayment">CONFIRMATION OF PAYMENT OF PASTOR(S)' SALARY</label>
+                        <select id="confirmationOfPayment" name="confirmationOfPayment">
+                            <option value="">Select</option>
+                            <option value="YES">YES</option>
+                            <option value="NO">NO</option>
+                        </select>
+                    </div>
+
+                    <div class="input-box">
+                        <label for="numberOfFullTimePastors">NO OF FULL-TIME PASTORS IN THE BRANCH</label>
+                        <input type="number" id="numberOfFullTimePastors" name="numberOfFullTimePastors">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitButton">
+                    <span id="buttonText">SUBMIT</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        const form = document.getElementById('financeForm');
+        const submitButton = document.getElementById('submitButton');
+        const buttonText = document.getElementById('buttonText');
+        const alertBox = document.getElementById('alertBox');
+
+        function showAlert(message, type = 'error') {
+            alertBox.textContent = message;
+            alertBox.className = `alert ${type} show`;
+            alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000);
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {};
+
+            // Convert FormData to JSON, filtering empty values
+            for (let [key, value] of formData.entries()) {
+                if (value && value.trim() !== '') {
+                    // Convert numbers
+                    const input = document.getElementById(key);
+                    if (input && input.type === 'number') {
+                        data[key] = parseFloat(value);
+                    } else {
+                        data[key] = value;
+                    }
+                }
+            }
+
+            // Validate required fields
+            if (!data.branch || !data.month) {
+                showAlert('Please fill in all required fields (Branch and Month)');
+                return;
+            }
+
+            // Disable button and show loader
+            submitButton.disabled = true;
+            buttonText.innerHTML = '<span class="loader"></span> Submitting...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/forms`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    showAlert(`Form submitted successfully! Reference ID: ${result.data._id}`, 'success');
+                    form.reset();
+                } else {
+                    const errors = result.errors ? result.errors.join(', ') : result.message;
+                    showAlert(`Error: ${errors}`);
+                }
+
+            } catch (error) {
+                console.error('Submission error:', error);
+                showAlert('Network error. Please check your connection and try again.');
+            } finally {
+                submitButton.disabled = false;
+                buttonText.textContent = 'SUBMIT';
+            }
+        });
+
+    </script>
+
+</body>
+
+</html>
