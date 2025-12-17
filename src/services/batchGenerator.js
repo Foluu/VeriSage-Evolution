@@ -1,14 +1,8 @@
-
-const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs').promises;
 
-
-
-
 // Account mapping based on the sample batch file and account list
 const ACCOUNT_MAP = {
-
   // Income/Credit accounts (IsDebit = N)
   offering: { account: '4500', description: 'OFFERING', isDebit: 'N' },
   tithe: { account: '4510', description: 'TITHE', isDebit: 'N' },
@@ -28,9 +22,7 @@ const ACCOUNT_MAP = {
   fuelAndOil: { account: '8200', description: 'FUEL & OIL', isDebit: 'Y' },
   repairsEquipment: { account: '8410', description: 'REPAIRS & MAINTENANCE - EQUIPMENT', isDebit: 'Y' },
   donationsGiftsLoveOffering: { account: '5030', description: 'DONATIONS/GIFTS/LOVE OFFERING', isDebit: 'Y' }
-
 };
-
 
 // Convert month name to date format
 const getDateFromMonth = (monthName, year = new Date().getFullYear()) => {
@@ -41,7 +33,6 @@ const getDateFromMonth = (monthName, year = new Date().getFullYear()) => {
   };
   
   const month = monthMap[monthName.toUpperCase()];
-  // Use 4th day of the month as transaction date
   return new Date(year, month - 1, 4);
 };
 
@@ -50,42 +41,46 @@ const formatDate = (date) => {
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
 };
 
+// Escape CSV field (handle commas, quotes, newlines)
+const escapeCSVField = (field) => {
+  if (field == null) return '';
+  
+  const str = String(field);
+  
+  // If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  
+  return str;
+};
+
 // Create batch file from form data
 const createBatch = async (form) => {
   try {
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Batch');
-    
-
-    // Set column headers matching the template
-    worksheet.columns = [
-      { header: 'TxDate', key: 'txDate', width: 12 },
-      { header: 'Description', key: 'description', width: 35 },
-      { header: 'Reference', key: 'reference', width: 12 },
-      { header: 'Amount', key: 'amount', width: 12 },
-      { header: 'UseTax', key: 'useTax', width: 8 },
-      { header: 'TaxType', key: 'taxType', width: 10 },
-      { header: 'TaxAccount', key: 'taxAccount', width: 12 },
-      { header: 'TaxAmount', key: 'taxAmount', width: 12 },
-      { header: 'Project', key: 'project', width: 10 },
-      { header: 'Account', key: 'account', width: 10 },
-      { header: 'IsDebit', key: 'isDebit', width: 8 }
-    ];
-    
-    
-    // Style the header row
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFD3D3D3' }
-    };
-    
     const txDate = formatDate(getDateFromMonth(form.month));
     const reference = form.branch.toUpperCase();
     
     let totalCredit = 0;
     let totalDebit = 0;
+    
+    // CSV Header
+    const headers = [
+      'TxDate',
+      'Description',
+      'Reference',
+      'Amount',
+      'UseTax',
+      'TaxType',
+      'TaxAccount',
+      'TaxAmount',
+      'Project',
+      'Account',
+      'IsDebit'
+    ];
+    
+    // Start CSV with header row
+    let csvContent = headers.join(',') + '\n';
     
     // Process each field in the form
     for (const [field, value] of Object.entries(form.toObject())) {
@@ -96,19 +91,22 @@ const createBatch = async (form) => {
       
       const mapping = ACCOUNT_MAP[field];
       
-      worksheet.addRow({
-        txDate,
-        description: mapping.description,
-        reference,
-        amount: value,
-        useTax: 'N',
-        taxType: '0',
-        taxAccount: '',
-        taxAmount: '',
-        project: '',
-        account: mapping.account,
-        isDebit: mapping.isDebit
-      });
+      // Create CSV row
+      const row = [
+        escapeCSVField(txDate),
+        escapeCSVField(mapping.description),
+        escapeCSVField(reference),
+        escapeCSVField(value),
+        escapeCSVField('N'),
+        escapeCSVField('0'),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(mapping.account),
+        escapeCSVField(mapping.isDebit)
+      ];
+      
+      csvContent += row.join(',') + '\n';
       
       // Track totals for petty cash calculation
       if (mapping.isDebit === 'N') {
@@ -122,36 +120,36 @@ const createBatch = async (form) => {
     const pettyCashAmount = totalCredit - totalDebit;
     
     if (pettyCashAmount !== 0) {
-      // Use next day for petty cash entry
       const pettyCashDate = new Date(getDateFromMonth(form.month));
       pettyCashDate.setDate(pettyCashDate.getDate() + 1);
       
-      worksheet.addRow({
-        txDate: formatDate(pettyCashDate),
-        description: 'PETTY CASH',
-        reference,
-        amount: Math.abs(pettyCashAmount),
-        useTax: 'N',
-        taxType: '0',
-        taxAccount: '',
-        taxAmount: '',
-        project: '',
-        account: '1300',
-        isDebit: pettyCashAmount < 0 ? 'N' : 'Y'
-      });
+      const pettyCashRow = [
+        escapeCSVField(formatDate(pettyCashDate)),
+        escapeCSVField('PETTY CASH'),
+        escapeCSVField(reference),
+        escapeCSVField(Math.abs(pettyCashAmount)),
+        escapeCSVField('N'),
+        escapeCSVField('0'),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField('1300'),
+        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y')
+      ];
+      
+      csvContent += pettyCashRow.join(',') + '\n';
     }
     
-
     // Ensure exports directory exists
     const exportDir = path.join(process.cwd(), process.env.EXPORT_DIR || 'exports');
     await fs.mkdir(exportDir, { recursive: true });
     
-    // Generate filename
-    const filename = `${form.branch}_${form.month}_${form._id}.xlsx`;
+    // Generate filename (CSV instead of XLSX)
+    const filename = `${form.branch}_${form.month}_${form._id}.csv`;
     const filepath = path.join(exportDir, filename);
     
-    // Write file
-    await workbook.xlsx.writeFile(filepath);
+    // Write CSV file
+    await fs.writeFile(filepath, csvContent, 'utf8');
     
     return {
       filename,
@@ -165,7 +163,7 @@ const createBatch = async (form) => {
   }
 };
 
-
 module.exports = {
   createBatch
 };
+

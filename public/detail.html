@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,6 +119,50 @@
       color: #000;
       font-weight: 500;
     }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      font-size: 1rem;
+      color: #000;
+      font-weight: 500;
+      font-family: 'Poppins', Arial, sans-serif;
+      padding: 0.5rem;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      background: transparent;
+      transition: all 0.3s;
+    }
+    
+    .field input:disabled,
+    .field textarea:disabled,
+    .field select:disabled {
+      background: transparent;
+      border: none;
+      cursor: default;
+    }
+    
+    .field input:not(:disabled),
+    .field textarea:not(:disabled),
+    .field select:not(:disabled) {
+      background: white;
+      border: 2px solid #007bff;
+      cursor: text;
+    }
+    
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      outline: none;
+      border-color: #f26522;
+      box-shadow: 0 0 0 3px rgba(242, 101, 34, 0.1);
+    }
+    
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
     
     .actions { 
       margin-top: 2rem; 
@@ -141,7 +184,7 @@
       gap: 0.5rem;
     }
     
-    button:hover {
+    button:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
@@ -164,6 +207,11 @@
     
     .btn-success {
       background: #28a745;
+      color: white;
+    }
+    
+    .btn-info {
+      background: #17a2b8;
       color: white;
     }
     
@@ -239,12 +287,12 @@
       opacity: 0.9;
       font-size: 0.9rem;
     }
-
   </style>
   
 </head>
 
 <body>
+
   <header>
     <button class="back-btn" onclick="history.back()">
       <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -264,12 +312,17 @@
     </div>
   </div>
 
+
+
+
   <script>
+
     const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
     const authToken = localStorage.getItem('authToken');
     const urlParams = new URLSearchParams(window.location.search);
     const formId = urlParams.get('id');
     let currentForm = null;
+    let isEditMode = false;
 
     // Check auth
     if (!authToken) {
@@ -352,43 +405,90 @@
       return { totalIncome, totalExpense, balance };
     }
 
+    // Check if field is editable
+    function isEditableField(key, value) {
+      const nonEditableFields = [
+        '_id', 'status', 'batchFileUrl', 'createdAt', 'updatedAt', '__v',
+        'submittedAt', 'reviewedAt', 'postedAt', 
+        'remittance25PercentReceipt', 'remittance5PercentHQReceipt'
+      ];
+      
+      return !nonEditableFields.includes(key) && 
+             !key.startsWith('_') &&
+             (typeof value === 'number' || typeof value === 'string') &&
+             value !== null;
+    }
+
     // Display form details
     function displayFormDetails(form) {
       const totals = calculateTotals(form);
       
+      // Render fields
       const fields = Object.entries(form)
-        .filter(([key, value]) => 
-          !key.startsWith('_') && 
-          key !== 'status' && 
+        .filter(([key, value]) =>
+          !key.startsWith('_') &&
+          key !== 'status' &&
           key !== 'batchFileUrl' &&
           key !== 'createdAt' &&
           key !== 'updatedAt' &&
           key !== '__v' &&
-          value !== 0 && 
-          value !== '' && 
+          value !== 0 &&
+          value !== '' &&
           value !== null
         )
         .map(([key, value]) => {
-          let displayValue = value;
-          
-          // Format based on type
-          if (typeof value === 'number') {
-            displayValue = formatCurrency(value);
-          } else if (value instanceof Date || key.includes('At')) {
-            displayValue = new Date(value).toLocaleString();
+          const label = key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, s => s.toUpperCase())
+            .trim();
+
+          const editable = isEditableField(key, value);
+          const isLongText = typeof value === 'string' && value.length > 60;
+          const isNumber = typeof value === 'number';
+
+          if (!editable) {
+            let displayValue = value;
+            if (value instanceof Date || key.includes('At')) {
+              displayValue = new Date(value).toLocaleString();
+            }
+            
+            return `
+              <div class="field">
+                <label>${label}</label>
+                <div class="value">${displayValue}</div>
+              </div>
+            `;
           }
-          
-          // Format field name
-          const label = key.replace(/([A-Z])/g, ' $1')
-                           .replace(/^./, str => str.toUpperCase())
-                           .trim();
-          
-          return `
-            <div class="field">
-              <label>${label}</label>
-              <div class="value">${displayValue}</div>
-            </div>
-          `;
+
+          // Editable fields
+          if (isLongText) {
+            return `
+              <div class="field">
+                <label>${label}</label>
+                <textarea
+                  class="value-input"
+                  data-field="${key}"
+                  data-original="${value}"
+                  disabled
+                >${value}</textarea>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="field">
+                <label>${label}</label>
+                <input
+                  class="value-input"
+                  type="${isNumber ? 'number' : 'text'}"
+                  step="${isNumber ? '0.01' : ''}"
+                  data-field="${key}"
+                  value="${value}"
+                  data-original="${value}"
+                  disabled
+                />
+              </div>
+            `;
+          }
         })
         .join('');
 
@@ -421,21 +521,27 @@
           <div class="actions">
             ${form.status === 'posted' && form.batchFileUrl ? `
               <button class="btn-success" onclick="downloadBatch()">
-                <i class="fas fa-download"></i> Download Batch File
+                <i class="fas fa-download"></i> Download CSV File
               </button>
             ` : `
               <button class="btn-primary" id="generateBtn" onclick="generateBatch()">
-                <i class="fas fa-file-excel"></i> Generate Batch File
+                <i class="fas fa-file-csv"></i> Generate CSV Batch File
               </button>
             `}
             
             ${form.status !== 'posted' ? `
-              <button class="btn-secondary" onclick="editForm()">
+              <button class="btn-secondary" id="editBtn" onclick="toggleEditMode()">
                 <i class="fas fa-edit"></i> Edit Form
+              </button>
+              <button class="btn-info" id="saveBtn" onclick="saveForm()" style="display:none">
+                <i class="fas fa-save"></i> Save Changes
+              </button>
+              <button class="btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none">
+                <i class="fas fa-times"></i> Cancel
               </button>
             ` : ''}
             
-            <button class="btn-danger" onclick="if(confirm('Delete this form?')) deleteForm()">
+            <button class="btn-danger" onclick="if(confirm('Delete this form? This cannot be undone.')) deleteForm()">
               <i class="fas fa-trash"></i> Delete Form
             </button>
           </div>
@@ -445,9 +551,115 @@
       document.getElementById('formContent').innerHTML = content;
     }
 
-    // Generate batch file
+    // Toggle edit mode
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      
+      const editBtn = document.getElementById('editBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const inputs = document.querySelectorAll('.value-input');
+
+      if (isEditMode) {
+        inputs.forEach(input => input.disabled = false);
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-flex';
+        cancelBtn.style.display = 'inline-flex';
+        showAlert('Edit mode enabled. Make changes and click Save.', 'success');
+      } else {
+        inputs.forEach(input => input.disabled = true);
+        editBtn.style.display = 'inline-flex';
+        saveBtn.style.display = 'none';
+        cancelBtn.style.display = 'none';
+      }
+    }
+
+    // Cancel edit
+    function cancelEdit() {
+      document.querySelectorAll('.value-input').forEach(input => {
+        input.value = input.dataset.original;
+      });
+      
+      toggleEditMode();
+      showAlert('Changes cancelled', 'success');
+    }
+
+    // Collect edited fields
+    function collectEditedFields() {
+      const updates = {};
+
+      document.querySelectorAll('.value-input').forEach(input => {
+        const fieldName = input.dataset.field;
+        const originalValue = input.dataset.original;
+        const currentValue = input.value;
+
+        if (currentValue !== originalValue) {
+          if (input.type === 'number') {
+            updates[fieldName] = parseFloat(currentValue) || 0;
+          } else {
+            updates[fieldName] = currentValue;
+          }
+        }
+      });
+
+      return updates;
+    }
+
+    // Save form
+    async function saveForm() {
+      const updates = collectEditedFields();
+
+      if (Object.keys(updates).length === 0) {
+        showAlert('No changes to save', 'error');
+        return;
+      }
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<span class="loader" style="width: 20px; height: 20px; border-width: 2px;"></span> Saving...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/${formId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(updates)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert('✅ Form updated successfully!', 'success');
+          
+          document.querySelectorAll('.value-input').forEach(input => {
+            input.dataset.original = input.value;
+          });
+          
+          isEditMode = true;
+          toggleEditMode();
+          
+          setTimeout(() => {
+            loadFormDetails();
+          }, 1000);
+        } else {
+          showAlert(result.message || 'Failed to update form');
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+        }
+
+      } catch (error) {
+        console.error('Save error:', error);
+        showAlert('Network error. Please try again.');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+      }
+    }
+
+    // Generate batch
     async function generateBatch() {
-      if (!confirm('Generate batch file for Sage 200 Evolution? This will mark the form as POSTED.')) {
+      if (!confirm('Generate CSV batch file for Sage 200 Evolution? This will mark the form as POSTED.')) {
         return;
       }
 
@@ -464,41 +676,32 @@
         const result = await response.json();
 
         if (result.success) {
-          showAlert('✅ Batch file generated successfully!', 'success');
-          
-          // Download file
+          showAlert('✅ CSV batch file generated successfully!', 'success');
           window.open(result.data.batchFile.downloadUrl, '_blank');
           
-          // Reload form details
           setTimeout(() => {
             loadFormDetails();
           }, 1000);
         } else {
           showAlert(result.message || 'Failed to generate batch file');
           btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-file-excel"></i> Generate Batch File';
+          btn.innerHTML = '<i class="fas fa-file-csv"></i> Generate CSV Batch File';
         }
 
       } catch (error) {
         console.error('Error generating batch:', error);
         showAlert('Network error. Please try again.');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-file-excel"></i> Generate Batch File';
+        btn.innerHTML = '<i class="fas fa-file-csv"></i> Generate CSV Batch File';
       }
     }
 
-    // Download batch file
+    // Download batch
     function downloadBatch() {
       if (currentForm && currentForm.batchFileUrl) {
         const downloadUrl = `https://verisage-evolution.onrender.com${currentForm.batchFileUrl}`;
         window.open(downloadUrl, '_blank');
       }
-    }
-
-    // Edit form
-    function editForm() {
-      // TODO: Implement edit functionality
-      showAlert('Edit functionality coming soon!', 'success');
     }
 
     // Delete form
@@ -512,7 +715,7 @@
         if (response.ok) {
           showAlert('Form deleted successfully', 'success');
           setTimeout(() => {
-            window.location.href = 'dashboard.html';
+            window.location.href = 'detail.html';
           }, 1500);
         } else {
           showAlert('Failed to delete form');
@@ -524,17 +727,18 @@
       }
     }
 
-    // Load form on page load
+    // Load on page load
     if (formId) {
       loadFormDetails();
     } else {
       showAlert('No form ID provided');
       setTimeout(() => {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'detail.html';
       }, 2000);
     }
-
   </script>
+
+
 
 </body>
 </html>
