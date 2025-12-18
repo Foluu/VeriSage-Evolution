@@ -36,9 +36,9 @@ const getDateFromMonth = (monthName, year = new Date().getFullYear()) => {
   return new Date(year, month - 1, 4);
 };
 
-// Format date as M/D/YYYY
+// Format date as D/M/YYYY
 const formatDate = (date) => {
-  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
 };
 
 // Escape CSV field (handle commas, quotes, newlines)
