@@ -121,7 +121,7 @@ const createBatch = async (form) => {
     
     if (pettyCashAmount !== 0) {
       const pettyCashDate = new Date(getDateFromMonth(form.month));
-      pettyCashDate.setDate(pettyCashDate.getDate() + 1);
+      pettyCashDate.setDate(pettyCashDate.getDate());
       
       const pettyCashRow = [
         escapeCSVField(formatDate(pettyCashDate)),
