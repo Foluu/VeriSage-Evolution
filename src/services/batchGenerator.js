@@ -31,7 +31,7 @@ const ACCOUNT_MAP = {
   remittance5PercentHQ: { account: '5002', description: '5% REMITTANCE FOR HQ. BUILDING', isDebit: 'Y' },
   salariesAndAllowances: { account: '7000', description: 'SALARIES & WAGES', isDebit: 'Y' },
   pastorsPension: { account: '7135', description: "PASTOR'S PENSION", isDebit: 'Y' },
-  crusadeAndMission: { account: '5210', description: 'CRUSADE & MISSION', isDebit: 'Y' },
+  crusadeMission: { account: '5210', description: 'CRUSADE & MISSION', isDebit: 'Y' },
   parsonageWelfare: { account: '7115', description: 'PARSONAGE WELFARE', isDebit: 'Y' },
   transportAndTravels: { account: '6050', description: 'TRANSPORT & TRAVELS', isDebit: 'Y' },
   hotelAndAccommodation: { account: '6060', description: 'HOTEL & ACCOMMODATION', isDebit: 'Y' },

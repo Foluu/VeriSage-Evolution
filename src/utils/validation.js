@@ -70,7 +70,7 @@ const validateFormSubmission = (data) => {
     remittance5PercentZonal: Joi.number().min(0).allow(''),
     salariesAndAllowances: Joi.number().min(0).allow(''),
     pastorsPension: Joi.number().min(0).allow(''),
-    crusadeMissionary: Joi.number().min(0).allow(''),
+    crusadeMission: Joi.number().min(0).allow(''),
     parsonageWelfare: Joi.number().min(0).allow(''),
     transportAndTravels: Joi.number().min(0).allow(''),
     hotelAndAccommodation: Joi.number().min(0).allow(''),
