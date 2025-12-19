@@ -35,7 +35,7 @@ const formSchema = new mongoose.Schema({
   remittance5PercentZonal: { type: Number, default: 0 },
   salariesAndAllowances: { type: Number, default: 0 },
   pastorsPension: { type: Number, default: 0 },
-  crusadeMissionary: { type: Number, default: 0 },
+  crusadeMission: { type: Number, default: 0 },
   parsonageWelfare: { type: Number, default: 0 },
   transportAndTravels: { type: Number, default: 0 },
   hotelAndAccommodation: { type: Number, default: 0 },
