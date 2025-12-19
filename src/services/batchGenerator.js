@@ -1,8 +1,10 @@
 const path = require('path');
 const fs = require('fs').promises;
 
-// Account mapping based on the sample batch file and account list
+
+// Account mapping based on account list
 const ACCOUNT_MAP = {
+
   // Income/Credit accounts (IsDebit = N)
   offering: { account: '4500', description: 'OFFERING', isDebit: 'N' },
   tithe: { account: '4510', description: 'TITHE', isDebit: 'N' },
@@ -11,18 +13,65 @@ const ACCOUNT_MAP = {
   annualThanksgiving: { account: '4550', description: 'ANNUAL THANKSGIVING', isDebit: 'N' },
   otherProject: { account: '4550', description: 'OTHER PROJECTS', isDebit: 'N' },
   donationReceived: { account: '4560', description: 'DONATION RECEIVED', isDebit: 'N' },
+  buildingProject: { account: '4600', description: 'BUILDING FUND', isDebit: 'N' },
+  crusadeAndMissionary: { account: '4560', description: 'CRUSADE & MISSION', isDebit: 'N' },
+  groupMinistryDeposits: { account: '4700', description: 'GROUP INCOME', isDebit: 'N' },
+  assetDisposal: { account: '4580', description: 'PROCEEDS FROM ASSET DISPOSAL', isDebit: 'N' },
+  interestIncome: { account: '4570', description: 'INTEREST INCOME', isDebit: 'N' },
+  loanRepaidByDebtors: { account: '4550', description: 'LOAN REPAID BY DEBTORS', isDebit: 'N' },
+  loanReceived: { account: '4550', description: 'LOAN RECEIVED', isDebit: 'N' },
+  donationReceived: { account: '4560', description: 'DONATION RECEIVED', isDebit: 'N' },
   
+  
+
+
   // Expense/Debit accounts (IsDebit = Y)
   remittance25Percent: { account: '5000', description: '25% REMITTANCE TO NAT. OFFICE', isDebit: 'Y' },
   remittance5PercentZonal: { account: '5001', description: '5% REMITTANCE TO ZONAL HEADQUARTERS', isDebit: 'Y' },
   remittance5PercentHQ: { account: '5002', description: '5% REMITTANCE FOR HQ. BUILDING', isDebit: 'Y' },
-  pastorsPension: { account: '4020', description: "PASTOR'S PENSION", isDebit: 'Y' },
+  salariesAndAllowances: { account: '7000', description: 'SALARIES & WAGES', isDebit: 'Y' },
+  pastorsPension: { account: '7135', description: "PASTOR'S PENSION", isDebit: 'Y' },
+  crusadeAndMissionary: { account: '5210', description: 'CRUSADE & MISSION', isDebit: 'Y' },
+  parsonageWelfare: { account: '7115', description: 'PARSONAGE WELFARE', isDebit: 'Y' },
+  transportAndTravels: { account: '6050', description: 'TRANSPORT & TRAVELS', isDebit: 'Y' },
+  hotelAndAccommodation: { account: '6060', description: 'HOTEL & ACCOMMODATION', isDebit: 'Y' },
+  donationsGiftsLoveOffering: { account: '6045', description: 'DONATIONS/GIFTS/LOVE OFFERING', isDebit: 'Y' },
+  entertainmentAndFeeding: { account: '6065', description: 'FEEDING & ENTERTAINMENT', isDebit: 'Y' },
   medicalWelfare: { account: '7120', description: 'MEDICAL WELFARE', isDebit: 'Y' },
-  officeExpenses: { account: '6005', description: 'OFFICE EXPENSES', isDebit: 'Y' },
+  churchExpenses: { account: '6000', description: 'CHURCH EXPENSES', isDebit: 'Y' },
+  officeExpenses: { account: '6010', description: 'OFFICE EXPENSES', isDebit: 'Y' },
+  rentParsonage: { account: '6400', description: 'RENT - PERSONAGE', isDebit: 'Y' },
+  rentChurchBuilding: { account: '6400', description: 'RENT - CHURCH BUILDING', isDebit: 'Y' },
+  telephoneInternet: { account: '6025', description: 'TELEPHONE', isDebit: 'Y' },
+  electricityLighting: { account: '6075', description: 'ELECTRICITY', isDbebit: 'Y' },
   fuelAndOil: { account: '8200', description: 'FUEL & OIL', isDebit: 'Y' },
-  repairsEquipment: { account: '8410', description: 'REPAIRS & MAINTENANCE - EQUIPMENT', isDebit: 'Y' },
-  donationsGiftsLoveOffering: { account: '5030', description: 'DONATIONS/GIFTS/LOVE OFFERING', isDebit: 'Y' }
+  licenseDuesSubscriptions: { account: '6035', description: 'LICENSE, DUES & SUBSCRIPTIONS', isDebit: 'Y' },
+  security: { account: '6300', description: 'SECURITY', isDebit: 'Y' },
+  bankCharges: { account: '6500', description: 'BANK CHARGES', isDebit: 'Y' },
+  groupExpenses: { account: '5900', description: 'GROUP EXPENSES', isDebit: 'Y' },
+  loanAdvanced: { account: '6105', description: 'LOAN ADVANCED', isDebit: 'Y' },
+  loanRepaidToCreditor: { account: '6105', description: 'LOAN REPAID TO CREDITOR', isDebit: 'Y' },
+  repairsFurnitureAndFittings: { account: '8420', description: 'FURN. & FITTINGS', isDebit: 'Y' },
+  repairsEquipment: { account: '8410', description: 'REP & MTCE. - EQUIPMENT', isDebit: 'Y' },
+  repairsMotorVehicles: { account: '8400', description: 'REP & MTCE. - M/V', isDebit: 'Y' },
+  repairsChurchBuilding: { account: '8405', description: 'REP & MTCE. - LAND & BUILDING', isDebit: 'Y' },
+  repairsParsonage: { account: '8300', description: 'REP & MTCE. - PARSONAGE', isDebit: 'Y' },
+  building: { account: '8500', description: 'DEP - BUILDING', isDebit: 'Y' },
+  motorVehicle: { account: '8510', description: 'DEP - MOTOR VEHICLE', isDebit: 'Y' },
+  generator: { account: '8530', description: 'DEP - PLANT & EQUIP.', isDebit: 'Y' },
+  musicalEquipment: { account: '6000', description: 'MUSCIAL EQUIPMENT', isDebit: 'Y' },
+  asabaProject: { account: '5700', description: 'ASABA PROJECT', isDebit: 'Y' },
+  others: { account: '6000', description: 'OTHERS', isDebit: 'Y' }
+
+
+
+
 };
+
+
+
+
+
 
 // Convert month name to date format
 const getDateFromMonth = (monthName, year = new Date().getFullYear()) => {
@@ -33,7 +82,7 @@ const getDateFromMonth = (monthName, year = new Date().getFullYear()) => {
   };
   
   const month = monthMap[monthName.toUpperCase()];
-  return new Date(year, month - 1, 4);
+  return new Date(year, month - 1, 25);
 };
 
 // Format date as D/M/YYYY
