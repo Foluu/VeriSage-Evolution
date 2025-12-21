@@ -19,10 +19,25 @@
             background: black;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
+        }
+
+
+        .page-content {
+            flex: 1; /* pushes footer down */
+            display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
+
+        .site-footer {
+            text-align: center;
+            padding: 15px 10px;
+            color: #aaa;
+            font-size: 0.85rem;
+        }
+
 
         .login-container {
             background: white;
@@ -203,6 +218,7 @@
 </head>
 <body>
 
+    <main class="page-content">
     <div class="login-container">
 
         <div class="login-left">
@@ -253,13 +269,18 @@
         </div>
 
     </div>
+    </main>
 
 
     
-    <!-- <footer class="text-center">
-        <small class="text-muted">&copy; 2025 Lychee Tech. 
-            <br> All rights reserved.</small>
-    </footer> -->
+    
+    <footer class="site-footer">
+    <small>
+        &copy; 2025 Lychee Tech.<br>
+        All rights reserved.
+    </small>
+    </footer>
+
 
 
 
