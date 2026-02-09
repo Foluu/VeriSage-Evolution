@@ -110,6 +110,104 @@
             padding: 0 40px;
         }
 
+        /* NEW: Image attachment styles */
+        .attachment-section {
+            grid-column: 1 / -1;
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #d0d0d0;
+        }
+
+        .attachment-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .attachment-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .file-upload-input {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(to right, #FFA000, #f26522);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .file-upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(242, 101, 34, 0.3);
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .file-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .file-icon {
+            color: #f26522;
+            font-size: 20px;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .file-size {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .file-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .file-remove:hover {
+            background: #c82333;
+        }
+
         .choose-file {
             border: 2px dashed #d0d0d0;
             width: 100%;
@@ -210,6 +308,10 @@
             .container2 {
                 max-width: 95%;
             }
+
+            .attachment-section {
+                grid-column: 1;
+            }
         }
     </style>
 
@@ -234,9 +336,10 @@
                     <h4><u>Guidelines for Completing the Form</u></h4>
                     <div>1. Kindly complete the form fields below with the appropriate data.</div>
                     <div>2. For fields that don't apply, leave them empty or input "0". Required fields are marked with '*'</div>
-                    <div>3. Report MUST be submitted not later than the 15th day of the subsequent month</div>
+                    <div>3. You may attach supporting images (receipts, teller confirmations, etc.) - up to 5 images, 5MB each</div>
+                    <div>4. Report MUST be submitted not later than the 15th day of the subsequent month</div>
                     <div>(e.g. Report for the month of June is expected not later than 15th of July)</div>
-                    <div>4. Every Report submitted would be registered as 25th of the selected month in the batch file.</div>
+                    <div>5. Every Report submitted would be registered as 25th of the selected month in the batch file.</div>
                 </div>
 
                 <div class="content1a">
@@ -556,6 +659,31 @@
                         <label for="numberOfFullTimePastors">NO OF FULL-TIME PASTORS IN THE BRANCH</label>
                         <input type="number" id="numberOfFullTimePastors" name="numberOfFullTimePastors">
                     </div>
+
+                    <!-- NEW: Image Attachment Section -->
+                    <div class="attachment-section">
+                        <h3>📎 Supporting Documents (Optional)</h3>
+                        <p class="attachment-info">
+                            Attach images of receipts, teller confirmations, or other supporting documents. 
+                            Maximum 5 images, 5MB each. Accepted formats: JPEG, PNG, GIF, WEBP
+                        </p>
+                        
+                        <div class="file-upload-wrapper">
+                            <input 
+                                type="file" 
+                                id="attachments" 
+                                name="attachments" 
+                                class="file-upload-input" 
+                                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                multiple
+                            >
+                            <label for="attachments" class="file-upload-label">
+                                📁 Choose Images
+                            </label>
+                        </div>
+
+                        <div id="fileList" class="file-list"></div>
+                    </div>
                 </div>
 
                 <button type="submit" id="submitButton">
@@ -583,7 +711,12 @@
         const submitButton = document.getElementById('submitButton');
         const buttonText = document.getElementById('buttonText');
         const alertBox = document.getElementById('alertBox');
+        const attachmentsInput = document.getElementById('attachments');
+        const fileListContainer = document.getElementById('fileList');
 
+        let selectedFiles = [];
+
+        // Show alert function
         function showAlert(message, type = 'error') {
             alertBox.textContent = message;
             alertBox.className = `alert ${type} show`;
@@ -594,27 +727,107 @@
             }, 5000);
         }
 
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // Handle file selection
+        attachmentsInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            // Check total file count
+            if (selectedFiles.length + files.length > 5) {
+                showAlert('Maximum 5 images allowed');
+                return;
+            }
+
+            // Validate each file
+            for (const file of files) {
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    showAlert(`${file.name} is not an image file`);
+                    continue;
+                }
+
+                // Check file size (5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    showAlert(`${file.name} is too large. Maximum size is 5MB`);
+                    continue;
+                }
+
+                // Add to selected files
+                selectedFiles.push(file);
+            }
+
+            // Update display
+            displayFileList();
+            
+            // Reset input
+            e.target.value = '';
+        });
+
+        // Display file list
+        function displayFileList() {
+            if (selectedFiles.length === 0) {
+                fileListContainer.innerHTML = '';
+                return;
+            }
+
+            fileListContainer.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    <div class="file-item-info">
+                        <span class="file-icon">🖼️</span>
+                        <div>
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <button type="button" class="file-remove" onclick="removeFile(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Remove file from selection
+        window.removeFile = function(index) {
+            selectedFiles.splice(index, 1);
+            displayFileList();
+        };
+
+        // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(form);
-            const data = {};
+            // Create FormData
+            const formData = new FormData();
 
-            // Convert FormData to JSON, filtering empty values
-            for (let [key, value] of formData.entries()) {
-                if (value && value.trim() !== '') {
-                    // Convert numbers
-                    const input = document.getElementById(key);
-                    if (input && input.type === 'number') {
-                        data[key] = parseFloat(value);
-                    } else {
-                        data[key] = value;
-                    }
+            // Add all form fields
+            const formElements = form.elements;
+            for (let i = 0; i < formElements.length; i++) {
+                const element = formElements[i];
+                
+                // Skip file input and buttons
+                if (element.type === 'file' || element.type === 'submit' || element.type === 'button') {
+                    continue;
+                }
+
+                // Only add if not empty
+                if (element.name && element.value && element.value.trim() !== '') {
+                    formData.append(element.name, element.value);
                 }
             }
 
+            // Add selected image files
+            for (const file of selectedFiles) {
+                formData.append('attachments', file);
+            }
+
             // Validate required fields
-            if (!data.branch || !data.month) {
+            if (!formData.get('branch') || !formData.get('month')) {
                 showAlert('Please fill in all required fields (Branch and Month)');
                 return;
             }
@@ -626,17 +839,22 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/forms`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
+                    body: formData // Send as multipart/form-data
                 });
 
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    showAlert(`Form submitted successfully! Reference ID: ${result.data._id}`, 'success');
+                    const attachmentInfo = result.data.attachments && result.data.attachments.length > 0
+                        ? ` with ${result.data.attachments.length} attachment(s)`
+                        : '';
+                    
+                    showAlert(`Form submitted successfully${attachmentInfo}! Reference ID: ${result.data._id}`, 'success');
+                    
+                    // Reset form and files
                     form.reset();
+                    selectedFiles = [];
+                    displayFileList();
                 } else {
                     const errors = result.errors ? result.errors.join(', ') : result.message;
                     showAlert(`Error: ${errors}`);
