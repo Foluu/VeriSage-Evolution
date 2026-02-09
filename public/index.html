@@ -212,6 +212,88 @@
       animation: spin 1s linear infinite;
     }
 
+
+    .bulk-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .btn-bulk-generate {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-bulk-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-bulk-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .eligible-count {
+      background: #f8f9fa;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .processing-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .processing-content {
+      background: white;
+      padding: 3rem;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .processing-content .loader {
+      width: 60px;
+      height: 60px;
+      border-width: 6px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .processing-content h3 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .processing-content p {
+      color: #666;
+    }
+
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -318,6 +400,13 @@
         Posted: <strong id="postedCount">0</strong>
       </div>
     </div>
+
+    <div class="bulk-actions" id="bulkActions" style="display: none; margin-left: auto;">
+      <button class="btn-bulk-generate" id="bulkGenerateBtn" onclick="generateBulkBatch()" disabled>
+        <i class="fas fa-file-excel"></i> Generate Group Batch File
+      </button>
+    </div>
+
   </div>
 
 
@@ -561,6 +650,145 @@
         loadForms(currentFilter);
       }
     }, 30000);
+
+  
+    // Global variables for bulk batch
+    let eligibleFormsCount = 0;
+    let isBulkProcessing = false;
+
+    // Check eligible forms count when on Reviewed tab
+    async function checkEligibleForms() {
+      if (currentFilter !== 'reviewed') {
+        document.getElementById('bulkActions').style.display = 'none';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/bulk/eligible-count`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          eligibleFormsCount = result.data.count;
+          
+          const bulkActionsDiv = document.getElementById('bulkActions');
+          const bulkGenerateBtn = document.getElementById('bulkGenerateBtn');
+          
+          if (eligibleFormsCount > 0) {
+            bulkActionsDiv.style.display = 'flex';
+            bulkGenerateBtn.disabled = false;
+            bulkGenerateBtn.innerHTML = `<i class="fas fa-file-excel"></i> Generate Group Batch File (${eligibleFormsCount} forms)`;
+          } else {
+            bulkActionsDiv.style.display = 'flex';
+            bulkGenerateBtn.disabled = true;
+            bulkGenerateBtn.innerHTML = '<i class="fas fa-file-excel"></i> No Eligible Forms';
+          }
+        }
+
+      } catch (error) {
+        console.error('Error checking eligible forms:', error);
+      }
+    }
+
+    // Generate bulk batch
+    async function generateBulkBatch() {
+      if (isBulkProcessing) return;
+      
+      if (!confirm(`Generate a single CSV batch file for all ${eligibleFormsCount} reviewed forms?\n\nThis will mark them as batched and they won't appear in future bulk exports.`)) {
+        return;
+      }
+
+      isBulkProcessing = true;
+      
+      // Show processing overlay
+      const overlay = document.createElement('div');
+      overlay.className = 'processing-overlay';
+      overlay.id = 'processingOverlay';
+      overlay.innerHTML = `
+        <div class="processing-content">
+          <div class="loader"></div>
+          <h3>Generating Bulk Batch File</h3>
+          <p>Processing ${eligibleFormsCount} forms...</p>
+          <p style="margin-top: 1rem; font-size: 0.9rem; color: #999;">This may take a moment</p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/bulk/generate-batch`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Remove overlay
+          document.body.removeChild(overlay);
+          
+          // Show success message
+          showAlert(`✅ Bulk batch file generated successfully! ${result.data.formsIncluded} forms included.`, 'success');
+          
+          // Download the file
+          window.open(result.data.batchFile.downloadUrl, '_blank');
+          
+          // Refresh the forms list
+          setTimeout(() => {
+            loadForms(currentFilter);
+            checkEligibleForms();
+          }, 1000);
+          
+        } else {
+          document.body.removeChild(overlay);
+          showAlert(result.message || 'Failed to generate bulk batch file');
+        }
+
+      } catch (error) {
+        console.error('Bulk batch generation error:', error);
+        if (document.getElementById('processingOverlay')) {
+          document.body.removeChild(document.getElementById('processingOverlay'));
+        }
+        showAlert('Network error. Please try again.');
+      } finally {
+        isBulkProcessing = false;
+      }
+    }
+
+    // Modified tab click handler - update existing tab event listener
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const filter = tab.dataset.filter;
+        loadForms(filter);
+        
+        // Check eligible forms when switching to Reviewed tab
+        if (filter === 'reviewed') {
+          setTimeout(checkEligibleForms, 500);
+        } else {
+          document.getElementById('bulkActions').style.display = 'none';
+        }
+        
+        // Clear search
+        document.getElementById('searchInput').value = '';
+      });
+    });
+
+    // Call checkEligibleForms after initial load if on reviewed tab
+    const originalLoadForms = loadForms;
+    loadForms = async function(status = 'all') {
+      await originalLoadForms(status);
+      if (status === 'reviewed') {
+        setTimeout(checkEligibleForms, 500);
+      }
+    };
+
 
   </script>
 
