@@ -129,9 +129,7 @@ const createBatch = async (form) => {
       'TaxAmount',
       'Project',
       'Account',
-      'IsDebit',
-      'HasAttachments',
-      'AttachmentCount'
+      'IsDebit'
     ];
     
     // Start CSV with header row
@@ -158,9 +156,7 @@ const createBatch = async (form) => {
         escapeCSVField(''),
         escapeCSVField(''),
         escapeCSVField(mapping.account),
-        escapeCSVField(mapping.isDebit),
-        escapeCSVField(hasAttachments ? 'Y' : 'N'),
-        escapeCSVField(attachmentCount)
+        escapeCSVField(mapping.isDebit)
       ];
       
       csvContent += row.join(',') + '\n';
@@ -191,9 +187,7 @@ const createBatch = async (form) => {
         escapeCSVField(''),
         escapeCSVField(''),
         escapeCSVField('1300'),
-        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y'),
-        escapeCSVField(hasAttachments ? 'Y' : 'N'),
-        escapeCSVField(attachmentCount)
+        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y')
       ];
       
       csvContent += pettyCashRow.join(',') + '\n';
