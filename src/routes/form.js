@@ -1,15 +1,64 @@
-
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs').promises;
 const Form = require('../models/form');
 const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware');
 const { filterFilledFields, validateFormSubmission } = require('../utils/validation');
 const { createBatch } = require('../services/batchGenerator');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
+// ============================================================================
+// MULTER CONFIGURATION FOR IMAGE ATTACHMENTS
+// ============================================================================
+
+// Configure storage for attachments
+const attachmentStorage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    // Create form-specific directory after form is created
+    // For now, use temp directory - will be moved after form creation
+    const tempDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'temp');
+    
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+      cb(null, tempDir);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: (req, file, cb) => {
+    // Sanitize filename to prevent path traversal
+    const sanitizedOriginal = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(sanitizedOriginal);
+    const name = path.basename(sanitizedOriginal, ext);
+    cb(null, `${name}-${uniqueSuffix}${ext}`);
+  }
+});
+
+// File filter - accept only images
+const imageFilter = (req, file, cb) => {
+  const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+  
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error(`Invalid file type. Only images (JPEG, PNG, GIF, WEBP) are allowed. Received: ${file.mimetype}`), false);
+  }
+};
+
+// Configure multer for attachments
+const uploadAttachments = multer({
+  storage: attachmentStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB per file
+    files: 5 // Maximum 5 files
+  },
+  fileFilter: imageFilter
+});
+
+// Configure multer for receipt uploads (existing functionality)
+const receiptStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, process.env.UPLOAD_DIR || 'uploads/');
   },
@@ -19,8 +68,8 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({
-  storage,
+const uploadReceipts = multer({
+  storage: receiptStorage,
   limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5242880 }, // 5MB default
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|pdf/;
@@ -34,56 +83,181 @@ const upload = multer({
   }
 });
 
-// @route   POST /api/forms
-// @desc    Submit new branch form
-// @access  Public (branch users)
-router.post('/', upload.fields([
-  { name: 'remittance25PercentReceipt', maxCount: 1 },
-  { name: 'remittance5PercentHQReceipt', maxCount: 1 }
-]), async (req, res) => {
-  try {
-    // Filter only filled fields
-    const filteredData = filterFilledFields(req.body);
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Move uploaded files from temp to form-specific directory
+ */
+const moveFilesToFormDirectory = async (files, formId) => {
+  if (!files || files.length === 0) return [];
+  
+  const formDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'forms', formId.toString());
+  await fs.mkdir(formDir, { recursive: true });
+  
+  const movedFiles = [];
+  
+  for (const file of files) {
+    const newPath = path.join(formDir, file.filename);
     
-    // Validate
-    const { error } = validateFormSubmission(filteredData);
-    if (error) {
-      return res.status(400).json({
+    try {
+      await fs.rename(file.path, newPath);
+      
+      movedFiles.push({
+        filename: file.filename,
+        originalName: file.originalname,
+        path: `/uploads/forms/${formId}/${file.filename}`,
+        mimetype: file.mimetype,
+        size: file.size,
+        uploadedAt: new Date()
+      });
+    } catch (error) {
+      console.error(`Error moving file ${file.filename}:`, error);
+      // Clean up if move fails
+      try {
+        await fs.unlink(file.path);
+      } catch (unlinkError) {
+        console.error('Error cleaning up temp file:', unlinkError);
+      }
+    }
+  }
+  
+  return movedFiles;
+};
+
+/**
+ * Clean up temporary files
+ */
+const cleanupTempFiles = async (files) => {
+  if (!files || files.length === 0) return;
+  
+  for (const file of files) {
+    try {
+      await fs.unlink(file.path);
+    } catch (error) {
+      console.error(`Error deleting temp file ${file.path}:`, error);
+    }
+  }
+};
+
+// ============================================================================
+// ROUTES
+// ============================================================================
+
+// @route   POST /api/forms
+// @desc    Submit new branch form (with optional image attachments)
+// @access  Public (branch users)
+router.post('/', 
+  // Handle both receipt uploads and new attachments
+  (req, res, next) => {
+    const upload = multer({
+      storage: attachmentStorage,
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+        files: 7 // 5 attachments + 2 receipts
+      },
+      fileFilter: (req, file, cb) => {
+        // Accept images for attachments and receipts
+        const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+        
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error(`Invalid file type: ${file.mimetype}`), false);
+        }
+      }
+    }).fields([
+      { name: 'remittance25PercentReceipt', maxCount: 1 },
+      { name: 'remittance5PercentHQReceipt', maxCount: 1 },
+      { name: 'attachments', maxCount: 5 }
+    ]);
+    
+    upload(req, res, next);
+  },
+  async (req, res) => {
+    let tempFiles = [];
+    
+    try {
+      // Collect all uploaded files for cleanup if needed
+      if (req.files) {
+        tempFiles = [
+          ...(req.files.remittance25PercentReceipt || []),
+          ...(req.files.remittance5PercentHQReceipt || []),
+          ...(req.files.attachments || [])
+        ];
+      }
+      
+      // Filter only filled fields
+      const filteredData = filterFilledFields(req.body);
+      
+      // Validate
+      const { error } = validateFormSubmission(filteredData);
+      if (error) {
+        await cleanupTempFiles(tempFiles);
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.details.map(d => d.message)
+        });
+      }
+
+      // Create form first (without attachments)
+      const form = new Form(filteredData);
+      await form.save();
+
+      // Now move attachment files to form-specific directory
+      if (req.files && req.files.attachments) {
+        const attachmentMetadata = await moveFilesToFormDirectory(req.files.attachments, form._id);
+        form.attachments = attachmentMetadata;
+      }
+
+      // Handle receipt files (existing functionality)
+      if (req.files) {
+        if (req.files.remittance25PercentReceipt) {
+          const receiptFile = req.files.remittance25PercentReceipt[0];
+          const receiptDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'receipts');
+          await fs.mkdir(receiptDir, { recursive: true });
+          
+          const receiptPath = path.join(receiptDir, receiptFile.filename);
+          await fs.rename(receiptFile.path, receiptPath);
+          form.remittance25PercentReceipt = `/uploads/receipts/${receiptFile.filename}`;
+        }
+        
+        if (req.files.remittance5PercentHQReceipt) {
+          const receiptFile = req.files.remittance5PercentHQReceipt[0];
+          const receiptDir = path.join(process.env.UPLOAD_DIR || 'uploads', 'receipts');
+          await fs.mkdir(receiptDir, { recursive: true });
+          
+          const receiptPath = path.join(receiptDir, receiptFile.filename);
+          await fs.rename(receiptFile.path, receiptPath);
+          form.remittance5PercentHQReceipt = `/uploads/receipts/${receiptFile.filename}`;
+        }
+      }
+
+      // Save form with attachments
+      await form.save();
+
+      res.status(201).json({
+        success: true,
+        message: 'Form submitted successfully',
+        data: form
+      });
+
+    } catch (error) {
+      console.error('Form submission error:', error);
+      
+      // Clean up temp files on error
+      await cleanupTempFiles(tempFiles);
+      
+      res.status(500).json({
         success: false,
-        message: 'Validation error',
-        errors: error.details.map(d => d.message)
+        message: 'Server error during form submission',
+        error: error.message
       });
     }
-
-    // Add file paths if uploaded
-    if (req.files) {
-      if (req.files.remittance25PercentReceipt) {
-        filteredData.remittance25PercentReceipt = req.files.remittance25PercentReceipt[0].path;
-      }
-      if (req.files.remittance5PercentHQReceipt) {
-        filteredData.remittance5PercentHQReceipt = req.files.remittance5PercentHQReceipt[0].path;
-      }
-    }
-
-    // Create form
-    const form = new Form(filteredData);
-    await form.save();
-
-    res.status(201).json({
-      success: true,
-      message: 'Form submitted successfully',
-      data: form
-    });
-
-  } catch (error) {
-    console.error('Form submission error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during form submission',
-      error: error.message
-    });
   }
-});
+);
 
 // @route   GET /api/forms
 // @desc    List all forms with filtering and pagination
@@ -169,6 +343,61 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// @route   GET /api/forms/:id/attachments/:filename
+// @desc    Download a specific attachment
+// @access  Private
+router.get('/:id/attachments/:filename', authMiddleware, async (req, res) => {
+  try {
+    const form = await Form.findById(req.params.id);
+    
+    if (!form) {
+      return res.status(404).json({
+        success: false,
+        message: 'Form not found'
+      });
+    }
+
+    // Verify attachment exists in form
+    const attachment = form.attachments.find(a => a.filename === req.params.filename);
+    
+    if (!attachment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Attachment not found'
+      });
+    }
+
+    // Build file path
+    const filePath = path.join(
+      process.cwd(),
+      process.env.UPLOAD_DIR || 'uploads',
+      'forms',
+      req.params.id,
+      req.params.filename
+    );
+
+    // Check if file exists
+    try {
+      await fs.access(filePath);
+    } catch (error) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found on disk'
+      });
+    }
+
+    // Send file
+    res.sendFile(filePath);
+
+  } catch (error) {
+    console.error('Download attachment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error downloading attachment'
+    });
+  }
+});
+
 // @route   PATCH /api/forms/:id
 // @desc    Update/review form
 // @access  Private
@@ -240,7 +469,7 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
       });
     }
 
-    // Generate batch file
+    // Generate batch file (updated to include attachment count)
     const batchResult = await createBatch(form);
     
     // Update form status
@@ -273,7 +502,7 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
 });
 
 // @route   DELETE /api/forms/:id
-// @desc    Delete form
+// @desc    Delete form and its attachments
 // @access  Private (Admin only)
 router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
   try {
@@ -284,6 +513,22 @@ router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
         success: false,
         message: 'Form not found'
       });
+    }
+
+    // Delete attachment files
+    if (form.attachments && form.attachments.length > 0) {
+      const formDir = path.join(
+        process.cwd(),
+        process.env.UPLOAD_DIR || 'uploads',
+        'forms',
+        req.params.id
+      );
+      
+      try {
+        await fs.rm(formDir, { recursive: true, force: true });
+      } catch (error) {
+        console.error('Error deleting attachment directory:', error);
+      }
     }
 
     await form.deleteOne();
@@ -304,7 +549,6 @@ router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
 // @access  Public
 router.get('/meta/branches', async (req, res) => {
   try {
-    // Return the branch list from the provided document
     const branches = [
       "1004", "72 ROAD FESTAC TOWN", "ABAKALIKI", "ABAKPA/ NEW HAVEN", "ABARRA OBODO",
       "ABEOKUTA", "ABORU", "ABRAKA", "ADAMO", "ADARANIJO G12", "ADIGBE", "ADO EKITI",

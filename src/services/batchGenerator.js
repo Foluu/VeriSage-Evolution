@@ -110,10 +110,14 @@ const createBatch = async (form) => {
     const txDate = formatDate(getDateFromMonth(form.month));
     const reference = form.branch.toUpperCase();
     
+    // Count attachments
+    const attachmentCount = form.attachments ? form.attachments.length : 0;
+    const hasAttachments = attachmentCount > 0;
+    
     let totalCredit = 0;
     let totalDebit = 0;
     
-    // CSV Header
+    // CSV Header (UPDATED to include attachment info)
     const headers = [
       'TxDate',
       'Description',
@@ -125,7 +129,9 @@ const createBatch = async (form) => {
       'TaxAmount',
       'Project',
       'Account',
-      'IsDebit'
+      'IsDebit',
+      'HasAttachments',
+      'AttachmentCount'
     ];
     
     // Start CSV with header row
@@ -140,7 +146,7 @@ const createBatch = async (form) => {
       
       const mapping = ACCOUNT_MAP[field];
       
-      // Create CSV row
+      // Create CSV row (UPDATED with attachment columns)
       const row = [
         escapeCSVField(txDate),
         escapeCSVField(mapping.description),
@@ -152,7 +158,9 @@ const createBatch = async (form) => {
         escapeCSVField(''),
         escapeCSVField(''),
         escapeCSVField(mapping.account),
-        escapeCSVField(mapping.isDebit)
+        escapeCSVField(mapping.isDebit),
+        escapeCSVField(hasAttachments ? 'Y' : 'N'),
+        escapeCSVField(attachmentCount)
       ];
       
       csvContent += row.join(',') + '\n';
@@ -183,7 +191,9 @@ const createBatch = async (form) => {
         escapeCSVField(''),
         escapeCSVField(''),
         escapeCSVField('1300'),
-        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y')
+        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y'),
+        escapeCSVField(hasAttachments ? 'Y' : 'N'),
+        escapeCSVField(attachmentCount)
       ];
       
       csvContent += pettyCashRow.join(',') + '\n';
@@ -200,10 +210,13 @@ const createBatch = async (form) => {
     // Write CSV file
     await fs.writeFile(filepath, csvContent, 'utf8');
     
+    console.log(`✓ Batch file generated: ${filename} (${attachmentCount} attachments)`);
+    
     return {
       filename,
       filepath,
-      url: `/exports/${filename}`
+      url: `/exports/${filename}`,
+      attachmentCount
     };
     
   } catch (error) {
@@ -215,4 +228,3 @@ const createBatch = async (form) => {
 module.exports = {
   createBatch
 };
-

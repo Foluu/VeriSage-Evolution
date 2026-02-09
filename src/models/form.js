@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const formSchema = new mongoose.Schema({
@@ -70,6 +69,16 @@ const formSchema = new mongoose.Schema({
   // Additional Information
   confirmationOfPayment: { type: String },
   numberOfFullTimePastors: { type: Number, default: 0 },
+  
+  // Image Attachments (NEW)
+  attachments: [{
+    filename: { type: String, required: true },
+    originalName: { type: String, required: true },
+    path: { type: String, required: true },
+    mimetype: { type: String, required: true },
+    size: { type: Number, required: true },
+    uploadedAt: { type: Date, default: Date.now }
+  }],
   
   // System Fields
   status: {
