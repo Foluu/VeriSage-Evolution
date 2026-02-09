@@ -436,6 +436,7 @@
           value !== '' &&
           value !== null
         )
+        
         .map(([key, value]) => {
           const label = key
             .replace(/([A-Z])/g, ' $1')
@@ -445,6 +446,37 @@
           const editable = isEditableField(key, value);
           const isLongText = typeof value === 'string' && value.length > 60;
           const isNumber = typeof value === 'number';
+
+
+          // Render attachments as images
+        if (key === 'attachments' && Array.isArray(value) && value.length) {
+          const images = value.map(file => {
+            const src = file.path.startsWith('http')
+              ? file.path
+              : `https://verisage-evolution.onrender.com${file.path}`;
+
+            return `
+              <a href="${src}" target="_blank">
+                <img 
+                  src="${src}" 
+                  alt="${file.filename}" 
+                  style="max-width:150px; max-height:150px; object-fit:cover; border-radius:8px; margin:5px; border:1px solid #ddd;"
+                />
+              </a>
+            `;
+          }).join('');
+
+          const label = 'Attachments';
+
+          return `
+            <div class="field" style="grid-column: 1 / -1;">
+              <label>${label}</label>
+              <div class="value" style="display:flex; flex-wrap:wrap; gap:10px;">
+                ${images}
+              </div>
+            </div>
+          `;
+        }
 
           if (!editable) {
             let displayValue = value;
