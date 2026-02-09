@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs').promises;
-const { v4: uuidv4 } = require('uuid');
 
 
 // Account mapping based on account list
@@ -21,6 +20,9 @@ const ACCOUNT_MAP = {
   interestIncome: { account: '4570', description: 'INTEREST INCOME', isDebit: 'N' },
   loanRepaidByDebtors: { account: '4550', description: 'LOAN REPAID BY DEBTORS', isDebit: 'N' },
   loanReceived: { account: '4550', description: 'LOAN RECEIVED', isDebit: 'N' },
+  donationReceived: { account: '4560', description: 'DONATION RECEIVED', isDebit: 'N' },
+  
+  
 
 
   // Expense/Debit accounts (IsDebit = Y)
@@ -60,7 +62,15 @@ const ACCOUNT_MAP = {
   musicalEquipment: { account: '6000', description: 'MUSCIAL EQUIPMENT', isDebit: 'Y' },
   asabaProject: { account: '5700', description: 'ASABA PROJECT', isDebit: 'Y' },
   others: { account: '6000', description: 'OTHERS', isDebit: 'Y' }
+
+
+
+
 };
+
+
+
+
 
 
 // Convert month name to date format
@@ -94,80 +104,20 @@ const escapeCSVField = (field) => {
   return str;
 };
 
-// Generate CSV rows for a single form
-const generateFormRows = (form) => {
-  const txDate = formatDate(getDateFromMonth(form.month));
-  const reference = form.branch.toUpperCase();
-  
-  let totalCredit = 0;
-  let totalDebit = 0;
-  const rows = [];
-  
-  // Process each field in the form
-  for (const [field, value] of Object.entries(form.toObject ? form.toObject() : form)) {
-    // Skip non-numeric fields, zero values, and system fields
-    if (typeof value !== 'number' || value === 0 || !ACCOUNT_MAP[field]) {
-      continue;
-    }
-    
-    const mapping = ACCOUNT_MAP[field];
-    
-    // Create CSV row
-    const row = [
-      escapeCSVField(txDate),
-      escapeCSVField(mapping.description),
-      escapeCSVField(reference),
-      escapeCSVField(value),
-      escapeCSVField('N'),
-      escapeCSVField('0'),
-      escapeCSVField(''),
-      escapeCSVField(''),
-      escapeCSVField(''),
-      escapeCSVField(mapping.account),
-      escapeCSVField(mapping.isDebit)
-    ];
-    
-    rows.push(row.join(','));
-    
-    // Track totals for petty cash calculation
-    if (mapping.isDebit === 'N') {
-      totalCredit += value;
-    } else {
-      totalDebit += value;
-    }
-  }
-  
-  // Calculate and add PETTY CASH entry
-  const pettyCashAmount = totalCredit - totalDebit;
-  
-  if (pettyCashAmount !== 0) {
-    const pettyCashDate = new Date(getDateFromMonth(form.month));
-    pettyCashDate.setDate(pettyCashDate.getDate());
-    
-    const pettyCashRow = [
-      escapeCSVField(formatDate(pettyCashDate)),
-      escapeCSVField('PETTY CASH'),
-      escapeCSVField(reference),
-      escapeCSVField(Math.abs(pettyCashAmount)),
-      escapeCSVField('N'),
-      escapeCSVField('0'),
-      escapeCSVField(''),
-      escapeCSVField(''),
-      escapeCSVField(''),
-      escapeCSVField('1300'),
-      escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y')
-    ];
-    
-    rows.push(pettyCashRow.join(','));
-  }
-  
-  return rows;
-};
-
-// Create batch file from single form data
+// Create batch file from form data
 const createBatch = async (form) => {
   try {
-    // CSV Header
+    const txDate = formatDate(getDateFromMonth(form.month));
+    const reference = form.branch.toUpperCase();
+    
+    // Count attachments
+    const attachmentCount = form.attachments ? form.attachments.length : 0;
+    const hasAttachments = attachmentCount > 0;
+    
+    let totalCredit = 0;
+    let totalDebit = 0;
+    
+    // CSV Header (UPDATED to include attachment info)
     const headers = [
       'TxDate',
       'Description',
@@ -185,25 +135,82 @@ const createBatch = async (form) => {
     // Start CSV with header row
     let csvContent = headers.join(',') + '\n';
     
-    // Add form rows
-    const formRows = generateFormRows(form);
-    csvContent += formRows.join('\n') + '\n';
+    // Process each field in the form
+    for (const [field, value] of Object.entries(form.toObject())) {
+      // Skip non-numeric fields, zero values, and system fields
+      if (typeof value !== 'number' || value === 0 || !ACCOUNT_MAP[field]) {
+        continue;
+      }
+      
+      const mapping = ACCOUNT_MAP[field];
+      
+      // Create CSV row (UPDATED with attachment columns)
+      const row = [
+        escapeCSVField(txDate),
+        escapeCSVField(mapping.description),
+        escapeCSVField(reference),
+        escapeCSVField(value),
+        escapeCSVField('N'),
+        escapeCSVField('0'),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(mapping.account),
+        escapeCSVField(mapping.isDebit)
+      ];
+      
+      csvContent += row.join(',') + '\n';
+      
+      // Track totals for petty cash calculation
+      if (mapping.isDebit === 'N') {
+        totalCredit += value;
+      } else {
+        totalDebit += value;
+      }
+    }
+    
+    // Calculate and add PETTY CASH entry
+    const pettyCashAmount = totalCredit - totalDebit;
+    
+    if (pettyCashAmount !== 0) {
+      const pettyCashDate = new Date(getDateFromMonth(form.month));
+      pettyCashDate.setDate(pettyCashDate.getDate());
+      
+      const pettyCashRow = [
+        escapeCSVField(formatDate(pettyCashDate)),
+        escapeCSVField('PETTY CASH'),
+        escapeCSVField(reference),
+        escapeCSVField(Math.abs(pettyCashAmount)),
+        escapeCSVField('N'),
+        escapeCSVField('0'),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField(''),
+        escapeCSVField('1300'),
+        escapeCSVField(pettyCashAmount < 0 ? 'N' : 'Y')
+      ];
+      
+      csvContent += pettyCashRow.join(',') + '\n';
+    }
     
     // Ensure exports directory exists
     const exportDir = path.join(process.cwd(), process.env.EXPORT_DIR || 'exports');
     await fs.mkdir(exportDir, { recursive: true });
     
-    // Generate filename
+    // Generate filename (CSV instead of XLSX)
     const filename = `${form.branch}_${form.month}_${form._id}.csv`;
     const filepath = path.join(exportDir, filename);
     
     // Write CSV file
     await fs.writeFile(filepath, csvContent, 'utf8');
     
+    console.log(`✓ Batch file generated: ${filename} (${attachmentCount} attachments)`);
+    
     return {
       filename,
       filepath,
-      url: `/exports/${filename}`
+      url: `/exports/${filename}`,
+      attachmentCount
     };
     
   } catch (error) {
@@ -212,68 +219,6 @@ const createBatch = async (form) => {
   }
 };
 
-// Create bulk batch file from multiple reviewed forms
-const createBulkBatch = async (forms) => {
-  try {
-    if (!forms || forms.length === 0) {
-      throw new Error('No forms provided for bulk batch generation');
-    }
-    
-    // Generate unique batch ID
-    const batchId = uuidv4();
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-    
-    // CSV Header
-    const headers = [
-      'TxDate',
-      'Description',
-      'Reference',
-      'Amount',
-      'UseTax',
-      'TaxType',
-      'TaxAccount',
-      'TaxAmount',
-      'Project',
-      'Account',
-      'IsDebit'
-    ];
-    
-    // Start CSV with header row
-    let csvContent = headers.join(',') + '\n';
-    
-    // Process each form and add its rows
-    for (const form of forms) {
-      const formRows = generateFormRows(form);
-      csvContent += formRows.join('\n') + '\n';
-    }
-    
-    // Ensure exports directory exists
-    const exportDir = path.join(process.cwd(), process.env.EXPORT_DIR || 'exports');
-    await fs.mkdir(exportDir, { recursive: true });
-    
-    // Generate filename with count and date
-    const filename = `BULK_BATCH_${timestamp}_${forms.length}_forms_${batchId.slice(0, 8)}.csv`;
-    const filepath = path.join(exportDir, filename);
-    
-    // Write CSV file
-    await fs.writeFile(filepath, csvContent, 'utf8');
-    
-    return {
-      batchId,
-      filename,
-      filepath,
-      url: `/exports/${filename}`,
-      formCount: forms.length,
-      formIds: forms.map(f => f._id.toString())
-    };
-    
-  } catch (error) {
-    console.error('Bulk batch generation error:', error);
-    throw new Error(`Failed to generate bulk batch file: ${error.message}`);
-  }
-};
-
 module.exports = {
-  createBatch,
-  createBulkBatch
+  createBatch
 };
