@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const formSchema = new mongoose.Schema({
@@ -79,6 +78,8 @@ const formSchema = new mongoose.Schema({
   },
 
   batchFileUrl: { type: String },
+  batchId: { type: String }, // ID of the bulk batch this form was exported in
+  batchedAt: { type: Date }, // When this form was included in a bulk batch
   submittedAt: { type: Date, default: Date.now },
   reviewedAt: { type: Date },
   postedAt: { type: Date }
@@ -90,6 +91,7 @@ const formSchema = new mongoose.Schema({
 // Index for quick queries
 formSchema.index({ status: 1, submittedAt: -1 });
 formSchema.index({ branch: 1, month: 1 });
+formSchema.index({ batchId: 1 }); // Index for bulk batch queries
 
 
 module.exports = mongoose.model('Form', formSchema);
