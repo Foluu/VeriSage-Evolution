@@ -21,6 +21,7 @@ const ACCOUNT_MAP = {
   interestIncome: { account: '4570', description: 'INTEREST INCOME', isDebit: 'N' },
   loanRepaidByDebtors: { account: '4550', description: 'LOAN REPAID BY DEBTORS', isDebit: 'N' },
   loanReceived: { account: '4550', description: 'LOAN RECEIVED', isDebit: 'N' },
+  donationReceived: { account: '4560', description: 'DONATION RECEIVED', isDebit: 'N' },
 
 
   // Expense/Debit accounts (IsDebit = Y)

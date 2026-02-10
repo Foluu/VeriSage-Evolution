@@ -69,6 +69,16 @@ const formSchema = new mongoose.Schema({
   // Additional Information
   confirmationOfPayment: { type: String },
   numberOfFullTimePastors: { type: Number, default: 0 },
+
+  // Image Attachments 
+  attachments: [{
+    filename: { type: String, required: true },
+    originalName: { type: String, required: true },
+    path: { type: String, required: true },
+    mimetype: { type: String, required: true },
+    size: { type: Number, required: true },
+    uploadedAt: { type: Date, default: Date.now }
+  }],
   
   // System Fields
   status: {
@@ -88,10 +98,13 @@ const formSchema = new mongoose.Schema({
 
 });
 
+
 // Index for quick queries
 formSchema.index({ status: 1, submittedAt: -1 });
 formSchema.index({ branch: 1, month: 1 });
 formSchema.index({ batchId: 1 }); // Index for bulk batch queries
+
+
 
 
 module.exports = mongoose.model('Form', formSchema);
