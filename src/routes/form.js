@@ -7,7 +7,7 @@ const fs = require('fs').promises;
 const Form = require('../models/form');
 const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware');
 const { filterFilledFields, validateFormSubmission } = require('../utils/validation');
-const { createBatch } = require('../services/batchGenerator');
+const { createBatch, createBulkBatch  } = require('../services/batchGenerator');
 
 
 
@@ -503,6 +503,93 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
     });
   }
 });
+
+
+// GET /api/forms/bulk/eligible-count
+router.get('/bulk/eligible-count', authMiddleware, async (req, res) => {
+  try {
+    const count = await Form.countDocuments({
+      status: 'reviewed',
+      batchId: { $exists: false }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        count,
+        hasEligibleForms: count > 0
+      }
+    });
+
+  } catch (error) {
+    console.error('Get eligible count error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error getting eligible forms count'
+    });
+  }
+});
+
+// POST /api/forms/bulk/generate-batch
+router.post('/bulk/generate-batch', authMiddleware, async (req, res) => {
+  try {
+    // Find all eligible forms
+    const eligibleForms = await Form.find({
+      status: 'reviewed',
+      batchId: { $exists: false }
+    }).sort({ branch: 1, month: 1 });
+
+    if (eligibleForms.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No eligible forms found for bulk batch generation'
+      });
+    }
+
+    // Generate bulk batch file
+    const batchResult = await createBulkBatch(eligibleForms);
+    
+    // Update all forms atomically
+    const bulkOps = eligibleForms.map(form => ({
+      updateOne: {
+        filter: { _id: form._id },
+        update: {
+          $set: {
+            batchId: batchResult.batchId,
+            batchedAt: new Date(),
+            batchFileUrl: batchResult.url
+          }
+        }
+      }
+    }));
+
+    const updateResult = await Form.bulkWrite(bulkOps);
+
+    res.json({
+      success: true,
+      message: `Bulk batch file generated successfully for ${eligibleForms.length} forms`,
+      data: {
+        batchId: batchResult.batchId,
+        batchFile: {
+          filename: batchResult.filename,
+          url: batchResult.url,
+          downloadUrl: `${req.protocol}://${req.get('host')}${batchResult.url}`
+        },
+        formsIncluded: eligibleForms.length,
+        formsUpdated: updateResult.modifiedCount
+      }
+    });
+
+  } catch (error) {
+    console.error('Bulk batch generation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error generating bulk batch',
+      error: error.message
+    });
+  }
+});
+
 
 // @route   DELETE /api/forms/:id
 // @desc    Delete form and its attachments

@@ -692,7 +692,7 @@
       }
     }
 
-    // Generate bulk batch
+    // IMPROVED VERSION with better download handling
     async function generateBulkBatch() {
       if (isBulkProcessing) return;
       
@@ -702,17 +702,16 @@
 
       isBulkProcessing = true;
       
-      // Show processing overlay
       const overlay = document.createElement('div');
       overlay.className = 'processing-overlay';
       overlay.id = 'processingOverlay';
       overlay.innerHTML = `
-        <div class="processing-content">
-          <div class="loader"></div>
-          <h3>Generating Bulk Batch File</h3>
-          <p>Processing ${eligibleFormsCount} forms...</p>
-          <p style="margin-top: 1rem; font-size: 0.9rem; color: #999;">This may take a moment</p>
-        </div>
+        
+          
+          Generating Bulk Batch File
+          Processing ${eligibleFormsCount} forms...
+          This may take a moment
+        
       `;
       document.body.appendChild(overlay);
 
@@ -728,20 +727,31 @@
         const result = await response.json();
 
         if (result.success) {
-          // Remove overlay
-          document.body.removeChild(overlay);
+          // IMPROVED: Show success overlay with download button
+          overlay.innerHTML = `
+              
+              ✅ Batch File Generated!
+              ${result.data.formsIncluded} forms included
+              
+                ${result.data.batchFile.filename}
+                  
+                  Download File  
+                
+                  Close
+            
+          `;
           
-          // Show success message
-          showAlert(`✅ Bulk batch file generated successfully! ${result.data.formsIncluded} forms included.`, 'success');
-          
-          // Download the file
-          window.open(result.data.batchFile.downloadUrl, '_blank');
-          
-          // Refresh the forms list
+          // ALSO attempt auto-download (may be blocked by browser)
           setTimeout(() => {
-            loadForms(currentFilter);
-            checkEligibleForms();
-          }, 1000);
+            const link = document.createElement('a');
+            link.href = result.data.batchFile.downloadUrl;
+            link.download = result.data.batchFile.filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }, 500);
+          
+          showAlert(`✅ Bulk batch file generated! ${result.data.formsIncluded} forms included.`, 'success');
           
         } else {
           document.body.removeChild(overlay);
@@ -758,6 +768,7 @@
         isBulkProcessing = false;
       }
     }
+
 
     // Modified tab click handler - update existing tab event listener
     document.querySelectorAll('.tab').forEach(tab => {
