@@ -446,6 +446,7 @@
 
 
   <script>
+
     const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
     let authToken = localStorage.getItem('authToken');
     let currentFilter = 'all';
@@ -692,7 +693,7 @@
       }
     }
 
-    // IMPROVED VERSION with better download handling
+    // VERSION with auto-download handling
     async function generateBulkBatch() {
       if (isBulkProcessing) return;
       
@@ -727,29 +728,39 @@
         const result = await response.json();
 
         if (result.success) {
-          // IMPROVED: Show success overlay with download button
+          // Backup plan: Show success overlay with an download button
           overlay.innerHTML = `
-              
-              ✅ Batch File Generated!
-              ${result.data.formsIncluded} forms included
-              
-                ${result.data.batchFile.filename}
-                  
-                  Download File  
-                
-                  Close
-            
-          `;
-          
-          // ALSO attempt auto-download (may be blocked by browser)
-          setTimeout(() => {
+              <div class="overlay-content">
+                <h3>✅ Batch File Generated!</h3>
+                <p>${result.data.formsIncluded} forms included</p>
+
+                <p class="filename">${result.data.batchFile.filename}</p>
+
+                <div class="actions">
+                  <a 
+                    href="${result.data.batchFile.downloadUrl}" 
+                    download="${result.data.batchFile.filename}"
+                    class="btn btn-primary"
+                    id="downloadBatchFile"
+                  >
+                    Download File
+                  </a>
+
+                  <button class="btn btn-secondary" id="closeOverlay">
+                    Close
+                  </button>
+                </div>
+              </div>
+            `;
+
+          // Attempt auto-download (I think this keeps getting blocked by browsers)
             const link = document.createElement('a');
             link.href = result.data.batchFile.downloadUrl;
             link.download = result.data.batchFile.filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-          }, 500);
+          
           
           showAlert(`✅ Bulk batch file generated! ${result.data.formsIncluded} forms included.`, 'success');
           
