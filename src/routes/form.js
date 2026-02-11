@@ -555,6 +555,8 @@ router.post('/bulk/generate-batch', authMiddleware, async (req, res) => {
         filter: { _id: form._id },
         update: {
           $set: {
+            status: 'posted',
+            postedAt: new Date(), 
             batchId: batchResult.batchId,
             batchedAt: new Date(),
             batchFileUrl: batchResult.url
