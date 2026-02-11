@@ -10,6 +10,9 @@ const formsRoutes = require('./routes/form');
 
 const app = express();
 
+// Trust Proxy
+app.set('trust proxy', true);
+
 
 // Middleware
 app.use(cors());

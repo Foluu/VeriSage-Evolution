@@ -78,7 +78,7 @@ const startServer = async () => {
       console.log('='.repeat(60));
       console.log(`  Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`  Server running on port ${PORT}`);
-      console.log(`  API Base URL: http://localhost:${PORT}/api`);
+      console.log(`  API Base URL: https://localhost:${PORT}/api`);
       console.log(`  Health Check: http://localhost:${PORT}/health`);
       console.log('='.repeat(60));
       console.log('');
