@@ -123,7 +123,7 @@ const generateFormRows = (form) => {
       escapeCSVField('0'),
       escapeCSVField(''),
       escapeCSVField(''),
-      escapeCSVField(''),
+      escapeCSVField(reference),
       escapeCSVField(mapping.account),
       escapeCSVField(mapping.isDebit)
     ];
