@@ -472,7 +472,7 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
       });
     }
 
-    // Generate batch file (updated to include attachment count)
+    // Generate batch file 
     const batchResult = await createBatch(form);
     
     // Update form status
@@ -509,7 +509,7 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
 router.get('/bulk/eligible-count', authMiddleware, async (req, res) => {
   try {
     const count = await Form.countDocuments({
-      status: 'reviewed',
+      status: { $in: ['reviewed', 'unreviewed'] },
       batchId: { $exists: false }
     });
 
@@ -535,7 +535,7 @@ router.post('/bulk/generate-batch', authMiddleware, async (req, res) => {
   try {
     // Find all eligible forms
     const eligibleForms = await Form.find({
-      status: 'reviewed',
+      status: { $in: ['reviewed', 'unreviewed'] },
       batchId: { $exists: false }
     }).sort({ branch: 1, month: 1 });
 
