@@ -7,6 +7,7 @@ const path = require('path');
 // Import routes
 const authRoutes = require('./routes/auth');
 const formsRoutes = require('./routes/form');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -42,7 +43,7 @@ if (process.env.NODE_ENV === 'development') {
 app.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: 'VeriSage Evolution Backend is running',
+    message: 'VeriSage Backend is running',
     timestamp: new Date().toISOString()
   });
 });
@@ -51,6 +52,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/forms', formsRoutes);
+app.use('/api/admin', adminRoutes); 
 
 
 // 404 handler

@@ -8,6 +8,7 @@ const Form = require('../models/form');
 const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware');
 const { filterFilledFields, validateFormSubmission } = require('../utils/validation');
 const { createBatch, createBulkBatch  } = require('../services/batchGenerator');
+const Branch = require('../models/branch');
 
 
 
@@ -666,6 +667,64 @@ router.get('/meta/branches', async (req, res) => {
     });
   }
 });
+
+
+// @route   GET /api/forms/meta/branches
+// @desc    Get list of all active branches (for dropdown)
+// @access  Public
+router.get('/meta/branches', async (req, res) => {
+  try {
+    const branches = await Branch.find({ isActive: true })
+      .select('name zone')
+      .sort({ name: 1 });
+    
+    // Return as simple array of names for backward compatibility
+    const branchNames = branches.map(b => b.name);
+    
+    res.json({
+      success: true,
+      data: branchNames,
+      // Also include full branch objects for enhanced dropdown
+      branches: branches
+    });
+ 
+  } catch (error) {
+    console.error('Get branches error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching branches'
+    });
+  }
+});
+ 
+// @route   GET /api/forms/meta/zones
+// @desc    Get list of all zones
+// @access  Public
+router.get('/meta/zones', async (req, res) => {
+  try {
+    const zones = [
+      'Headquarters Annex',
+      'Mainland Zone 1',
+      'Mainland Zone 2',
+      'Island Zone 1',
+      'Island Zone 2'
+    ];
+    
+    res.json({
+      success: true,
+      data: zones
+    });
+ 
+  } catch (error) {
+    console.error('Get zones error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching zones'
+    });
+  }
+});
+
+
 
 
 

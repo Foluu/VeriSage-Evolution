@@ -359,7 +359,7 @@
                         <label for="branch">BRANCH <b>*</b></label>
                         <select id="branch" name="branch" required>
                             <option value="">Select Branch</option>
-                            <option value="1004">1004</option>
+                            <!-- <option value="1004">1004</option>
                             <option value="72 ROAD FESTAC TOWN">72 ROAD FESTAC TOWN</option>
                             <option value="ABAKALIKI">ABAKALIKI</option>
                             <option value="ABAKPA/ NEW HAVEN">ABAKPA/ NEW HAVEN</option>
@@ -415,7 +415,7 @@
                             <option value="BOGIGE">BOGIGE</option>
                             <option value="BONNY ISLAND">BONNY ISLAND</option>
                             <option value="BUCKNOR">BUCKNOR</option>
-                            <option value="BWARI ABUJA">BWARI ABUJA</option>
+                            <option value="BWARI ABUJA">BWARI ABUJA</option> -->
                         </select>
                     </div>
 
@@ -927,6 +927,51 @@
                 buttonText.textContent = 'SUBMIT';
             }
         });
+
+        // Load branches dynamically on page load
+        async function loadBranches() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/forms/meta/branches`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+            // Get the branch input field
+            const branchInput = document.getElementById('branch');
+            
+            const select = document.createElement('select');
+            select.id = 'branch';
+            select.name = 'branch';
+            select.required = true;
+            
+            // Add placeholder option
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Select Branch';
+            select.appendChild(placeholder);
+            
+            // Add branch options
+            result.data.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch;
+                option.textContent = branch;
+                select.appendChild(option);
+            });
+            
+            // Replace input with select
+            branchInput.parentNode.replaceChild(select, branchInput);
+            }
+        } catch (error) {
+            console.error('Error loading branches:', error);
+            // Fallback to manual entry if loading fails
+        }
+        }
+        
+        // Call this when page loads
+        window.addEventListener('DOMContentLoaded', loadBranches);
+
+
+
+
 
     </script>
 
