@@ -640,33 +640,33 @@ router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
 // @route   GET /api/forms/meta/branches
 // @desc    Get list of all branches (for dropdown)
 // @access  Public
-router.get('/meta/branches', async (req, res) => {
-  try {
-    const branches = [
-      "1004", "72 ROAD FESTAC TOWN", "ABAKALIKI", "ABAKPA/ NEW HAVEN", "ABARRA OBODO",
-      "ABEOKUTA", "ABORU", "ABRAKA", "ADAMO", "ADARANIJO G12", "ADIGBE", "ADO EKITI",
-      "AGBANI", "AGBEDE", "AGBOOLA", "AGBOR", "AGBOYI", "AGUDA", "AIRPORT ROAD PH",
-      "AIT ALAGBADO", "AJAH", "AJANGBADI", "AJAO ESTATE", "AJEGUNLE", "AKOKA",
-      "AKOKA 3", "AKOKA ZONE 1", "AKOKA ZONE 2", "AKURE MAIN.", "AKUTE", "ALABA",
-      "ALAPERE", "ALAPERE ZONE", "ALPHA BEACH", "AMUWO ODOFIN", "ANFANI", "ANTHONY",
-      "APAPA", "APAPA 2", "AREA 5", "ASABA", "AWKA", "AWODIORA", "AYOBO", "BADAGRY",
-      "BARANGONI", "BARIGA", "BARIGA 2", "BARIGA ZONE 1", "BARUWA-LAGOS", "BASSA",
-      "BENIN", "BERGER /UTAKO", "BOGIGE", "BONNY ISLAND", "BUCKNOR", "BWARI ABUJA"
-    ];
+// router.get('/meta/branches', async (req, res) => {
+//   try {
+//     const branches = [
+//       "1004", "72 ROAD FESTAC TOWN", "ABAKALIKI", "ABAKPA/ NEW HAVEN", "ABARRA OBODO",
+//       "ABEOKUTA", "ABORU", "ABRAKA", "ADAMO", "ADARANIJO G12", "ADIGBE", "ADO EKITI",
+//       "AGBANI", "AGBEDE", "AGBOOLA", "AGBOR", "AGBOYI", "AGUDA", "AIRPORT ROAD PH",
+//       "AIT ALAGBADO", "AJAH", "AJANGBADI", "AJAO ESTATE", "AJEGUNLE", "AKOKA",
+//       "AKOKA 3", "AKOKA ZONE 1", "AKOKA ZONE 2", "AKURE MAIN.", "AKUTE", "ALABA",
+//       "ALAPERE", "ALAPERE ZONE", "ALPHA BEACH", "AMUWO ODOFIN", "ANFANI", "ANTHONY",
+//       "APAPA", "APAPA 2", "AREA 5", "ASABA", "AWKA", "AWODIORA", "AYOBO", "BADAGRY",
+//       "BARANGONI", "BARIGA", "BARIGA 2", "BARIGA ZONE 1", "BARUWA-LAGOS", "BASSA",
+//       "BENIN", "BERGER /UTAKO", "BOGIGE", "BONNY ISLAND", "BUCKNOR", "BWARI ABUJA"
+//     ];
 
-    res.json({
-      success: true,
-      data: branches
-    });
+//     res.json({
+//       success: true,
+//       data: branches
+//     });
 
-  } catch (error) {
-    console.error('Get branches error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error fetching branches'
-    });
-  }
-});
+//   } catch (error) {
+//     console.error('Get branches error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error fetching branches'
+//     });
+//   }
+// });
 
 
 // @route   GET /api/forms/meta/branches
