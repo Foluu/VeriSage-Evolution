@@ -1,0 +1,1158 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration - VeriSage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      background: #f5f6fa;
+    }
+
+    header {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .back-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .logout-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+      color: #333;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+      color: #666;
+    }
+
+    .tabs {
+      display: flex;
+      background: white;
+      padding: 0.5rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: all 0.3s;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .tab.active {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+
+    .tab:hover:not(.active) {
+      background: #f0f0f0;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .card-header h2 {
+      color: #333;
+      font-size: 1.3rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: 'Poppins', Arial, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(242, 101, 34, 0.3);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    thead {
+      background: #f8f9fa;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    th {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+    }
+
+    tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: inline-block;
+    }
+
+    .badge.admin {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .badge.viewer {
+      background: #3498db;
+      color: white;
+    }
+
+    .badge.active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .badge.inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .modal-header h3 {
+      color: #333;
+      font-size: 1.3rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #f26522;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 5px;
+      margin-bottom: 1.5rem;
+      display: none;
+    }
+
+    .alert.show {
+      display: block;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border-left: 4px solid #f5c6cb;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border-left: 4px solid #c3e6cb;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      color: #ddd;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+    }
+
+    .loader {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #f26522;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .search-box {
+      margin-bottom: 1rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #f26522;
+    }
+
+    @media (max-width: 768px) {
+      table {
+        font-size: 0.85rem;
+      }
+
+      th, td {
+        padding: 0.75rem 0.5rem;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+
+</head>
+
+<body>
+
+
+  <header>
+    <div class="header-left">
+      <button class="back-btn" onclick="window.location.href='index.html'">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </button>
+      <h1><i class="fas fa-cog"></i> Configuration</h1>
+    </div>
+    <div class="header-right">
+      <div class="user-info">
+        <i class="fas fa-user-circle" style="font-size: 1.5rem;"></i>
+        <span id="userName">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </header>
+
+
+
+  <div class="container">
+    <div class="page-header">
+      <h1>System Configuration</h1>
+      <p>Manage users, branches, and system settings</p>
+    </div>
+
+    <div id="alertBox" class="alert"></div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="users">
+        <i class="fas fa-users"></i> Users
+      </div>
+      <div class="tab" data-tab="branches">
+        <i class="fas fa-map-marker-alt"></i> Branches
+      </div>
+      <div class="tab" data-tab="settings">
+        <i class="fas fa-sliders-h"></i> Settings
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="usersTab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-users"></i> User Management</h2>
+          <button class="btn btn-primary" onclick="openUserModal()">
+            <i class="fas fa-plus"></i> Add New User
+          </button>
+        </div>
+
+        <div class="search-box">
+          <input type="text" id="userSearch" placeholder="🔍 Search users..." onkeyup="filterUsers()">
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTable">
+            <tr>
+              <td colspan="7">
+                <div class="loading">
+                  <div class="loader"></div>
+                  <p>Loading users...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- Branches Tab -->
+    <div id="branchesTab" class="tab-content" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-map-marker-alt"></i> Branch Management</h2>
+          <button class="btn btn-primary" onclick="openBranchModal()">
+            <i class="fas fa-plus"></i> Add New Branch
+          </button>
+        </div>
+
+        <div class="search-box">
+          <input type="text" id="branchSearch" placeholder="🔍 Search branches..." onkeyup="filterBranches()">
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Branch Name</th>
+              <th>Zone</th>
+              <th>Created</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="branchesTable">
+            <tr>
+              <td colspan="5">
+                <div class="loading">
+                  <div class="loader"></div>
+                  <p>Loading branches...</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-content" style="display: none;">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-sliders-h"></i> System Settings</h2>
+        </div>
+
+        <div class="form-group">
+          <label>Maximum File Upload Size (MB)</label>
+          <input type="number" id="maxFileSize" value="5" min="1" max="50">
+        </div>
+
+        <div class="form-group">
+          <label>Session Timeout (days)</label>
+          <input type="number" id="sessionTimeout" value="7" min="1" max="30">
+        </div>
+
+        <div class="form-group">
+          <label>Auto-logout Inactive Users (minutes)</label>
+          <input type="number" id="autoLogout" value="60" min="15" max="240">
+        </div>
+
+        <div class="form-group">
+          <label>System Email</label>
+          <input type="email" id="systemEmail" value="admin@trem.com">
+        </div>
+
+        <button class="btn btn-success" onclick="saveSettings()">
+          <i class="fas fa-save"></i> Save Settings
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-database"></i> Database Management</h2>
+        </div>
+
+        <p style="color: #666; margin-bottom: 1.5rem;">
+          Manage database backups and system maintenance tasks.
+        </p>
+
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button class="btn btn-primary" onclick="exportData()">
+            <i class="fas fa-download"></i> Export All Data
+          </button>
+          <button class="btn btn-secondary" onclick="alert('Backup initiated')">
+            <i class="fas fa-save"></i> Create Backup
+          </button>
+          <button class="btn btn-danger" onclick="confirmClearLogs()">
+            <i class="fas fa-trash"></i> Clear Old Logs
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- User Modal -->
+  <div id="userModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Add New User</h3>
+        <button class="modal-close" onclick="closeUserModal()">×</button>
+      </div>
+
+      <form id="userForm" onsubmit="saveUser(event)">
+        <input type="hidden" id="userId">
+
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="userName" required>
+        </div>
+
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="userUsername" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="userEmail" required>
+        </div>
+
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="userPassword" required>
+          <small style="color: #666;">Leave blank when editing to keep current password</small>
+        </div>
+
+        <div class="form-group">
+          <label>Role *</label>
+          <select id="userRole" required>
+            <option value="viewer">Viewer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select id="userStatus">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save User
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Branch Modal -->
+  <div id="branchModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="branchModalTitle">Add New Branch</h3>
+        <button class="modal-close" onclick="closeBranchModal()">×</button>
+      </div>
+
+      <form id="branchForm" onsubmit="saveBranch(event)">
+        <input type="hidden" id="branchId">
+
+        <div class="form-group">
+          <label>Branch Name *</label>
+          <input type="text" id="branchName" required placeholder="e.g., AJAH">
+        </div>
+
+        <div class="form-group">
+          <label>Zone</label>
+          <select id="branchZone">
+            <option value="">Select Zone</option>
+            <option value="Headquarters Annex">Headquarters Annex</option>
+            <option value="Mainland Zone 1">Mainland Zone 1</option>
+            <option value="Mainland Zone 2">Mainland Zone 2</option>
+            <option value="Island Zone 1">Island Zone 1</option>
+            <option value="Island Zone 2">Island Zone 2</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="branchDescription" rows="3" placeholder="Optional branch description"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeBranchModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Branch
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+
+  <script>
+    const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
+    let authToken = localStorage.getItem('authToken');
+    let allUsers = [];
+    let allBranches = [];
+
+    // Check authentication
+    function checkAuth() {
+      if (!authToken) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+      const alertBox = document.getElementById('alertBox');
+      alertBox.textContent = message;
+      alertBox.className = `alert ${type} show`;
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      
+      setTimeout(() => {
+        alertBox.classList.remove('show');
+      }, 5000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = 'login.html';
+    }
+
+    // Load user info
+    async function loadUserInfo() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          document.getElementById('userName').textContent = result.user.name;
+          
+          // Check if user is admin
+          if (result.user.role !== 'admin') {
+            showAlert('You must be an admin to access this page', 'error');
+            setTimeout(() => window.location.href = 'index.html', 2000);
+          }
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error loading user info:', error);
+      }
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+
+        const tabName = tab.dataset.tab;
+        const tabContent = document.getElementById(`${tabName}Tab`);
+        if (tabContent) {
+          tabContent.style.display = 'block';
+        }
+
+        loadTabData(tabName);
+      });
+    });
+
+    // Load tab data
+    function loadTabData(tabName) {
+      switch(tabName) {
+        case 'users':
+          loadUsers();
+          break;
+        case 'branches':
+          loadBranches();
+          break;
+        case 'settings':
+          // Settings are already visible
+          break;
+      }
+    }
+
+    // ============= USER MANAGEMENT =============
+
+    // Load users
+    async function loadUsers() {
+      const tbody = document.getElementById('usersTable');
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          allUsers = result.data;
+          displayUsers(allUsers);
+        } else {
+          tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Failed to load users</p></div></td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Error loading users</p></div></td></tr>';
+      }
+    }
+
+    // Display users
+    function displayUsers(users) {
+      const tbody = document.getElementById('usersTable');
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-users"></i><p>No users found</p></div></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(user => `
+        <tr>
+          <td><strong>${user.name}</strong></td>
+          <td>${user.username}</td>
+          <td>${user.email}</td>
+          <td><span class="badge ${user.role}">${user.role.toUpperCase()}</span></td>
+          <td><span class="badge ${user.isActive ? 'active' : 'inactive'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+          <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick='editUser(${JSON.stringify(user)})'>
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}', '${user.username}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Filter users
+    function filterUsers() {
+      const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+      const filtered = allUsers.filter(user => 
+        user.name.toLowerCase().includes(searchTerm) ||
+        user.username.toLowerCase().includes(searchTerm) ||
+        user.email.toLowerCase().includes(searchTerm)
+      );
+      displayUsers(filtered);
+    }
+
+    // Open user modal
+    function openUserModal() {
+      document.getElementById('userModalTitle').textContent = 'Add New User';
+      document.getElementById('userForm').reset();
+      document.getElementById('userId').value = '';
+      document.getElementById('userPassword').required = true;
+      document.getElementById('userModal').classList.add('show');
+    }
+
+    // Edit user
+    function editUser(user) {
+      document.getElementById('userModalTitle').textContent = 'Edit User';
+      document.getElementById('userId').value = user._id;
+      document.getElementById('userName').value = user.name;
+      document.getElementById('userUsername').value = user.username;
+      document.getElementById('userEmail').value = user.email;
+      document.getElementById('userRole').value = user.role;
+      document.getElementById('userStatus').value = user.isActive.toString();
+      document.getElementById('userPassword').required = false;
+      document.getElementById('userPassword').value = '';
+      document.getElementById('userModal').classList.add('show');
+    }
+
+    // Close user modal
+    function closeUserModal() {
+      document.getElementById('userModal').classList.remove('show');
+    }
+
+    // Save user
+    async function saveUser(event) {
+      event.preventDefault();
+      
+      const userId = document.getElementById('userId').value;
+      const userData = {
+        name: document.getElementById('userName').value,
+        username: document.getElementById('userUsername').value,
+        email: document.getElementById('userEmail').value,
+        role: document.getElementById('userRole').value,
+        isActive: document.getElementById('userStatus').value === 'true'
+      };
+
+      const password = document.getElementById('userPassword').value;
+      if (password) {
+        userData.password = password;
+      }
+
+      try {
+        const url = userId 
+          ? `${API_BASE_URL}/admin/users/${userId}`
+          : `${API_BASE_URL}/admin/users`;
+        
+        const method = userId ? 'PATCH' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert(`User ${userId ? 'updated' : 'created'} successfully!`, 'success');
+          closeUserModal();
+          loadUsers();
+        } else {
+          showAlert(result.message || 'Failed to save user');
+        }
+      } catch (error) {
+        console.error('Error saving user:', error);
+        showAlert('Error saving user. Please try again.');
+      }
+    }
+
+    // Delete user
+    async function deleteUser(userId, username) {
+      if (!confirm(`Delete user "${username}"? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          showAlert('User deleted successfully', 'success');
+          loadUsers();
+        } else {
+          showAlert('Failed to delete user');
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        showAlert('Error deleting user');
+      }
+    }
+
+    // ============= BRANCH MANAGEMENT =============
+
+    // Load branches
+    async function loadBranches() {
+      const tbody = document.getElementById('branchesTable');
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/branches`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          allBranches = result.data;
+          displayBranches(allBranches);
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>Failed to load branches</p></div></td></tr>';
+        }
+      } catch (error) {
+        console.error('Error loading branches:', error);
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>Error loading branches</p></div></td></tr>';
+      }
+    }
+
+    // Display branches
+    function displayBranches(branches) {
+      const tbody = document.getElementById('branchesTable');
+      
+      if (branches.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fas fa-map-marker-alt"></i><p>No branches found</p></div></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = branches.map(branch => `
+        <tr>
+          <td><strong>${branch.name}</strong></td>
+          <td>${branch.zone || 'N/A'}</td>
+          <td>${new Date(branch.createdAt).toLocaleDateString()}</td>
+          <td><span class="badge active">Active</span></td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick='editBranch(${JSON.stringify(branch)})'>
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteBranch('${branch._id}', '${branch.name}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Filter branches
+    function filterBranches() {
+      const searchTerm = document.getElementById('branchSearch').value.toLowerCase();
+      const filtered = allBranches.filter(branch => 
+        branch.name.toLowerCase().includes(searchTerm) ||
+        (branch.zone && branch.zone.toLowerCase().includes(searchTerm))
+      );
+      displayBranches(filtered);
+    }
+
+    // Open branch modal
+    function openBranchModal() {
+      document.getElementById('branchModalTitle').textContent = 'Add New Branch';
+      document.getElementById('branchForm').reset();
+      document.getElementById('branchId').value = '';
+      document.getElementById('branchModal').classList.add('show');
+    }
+
+    // Edit branch
+    function editBranch(branch) {
+      document.getElementById('branchModalTitle').textContent = 'Edit Branch';
+      document.getElementById('branchId').value = branch._id;
+      document.getElementById('branchName').value = branch.name;
+      document.getElementById('branchZone').value = branch.zone || '';
+      document.getElementById('branchDescription').value = branch.description || '';
+      document.getElementById('branchModal').classList.add('show');
+    }
+
+    // Close branch modal
+    function closeBranchModal() {
+      document.getElementById('branchModal').classList.remove('show');
+    }
+
+    // Save branch
+    async function saveBranch(event) {
+      event.preventDefault();
+      
+      const branchId = document.getElementById('branchId').value;
+      const branchData = {
+        name: document.getElementById('branchName').value.toUpperCase(),
+        zone: document.getElementById('branchZone').value,
+        description: document.getElementById('branchDescription').value
+      };
+
+      try {
+        const url = branchId 
+          ? `${API_BASE_URL}/admin/branches/${branchId}`
+          : `${API_BASE_URL}/admin/branches`;
+        
+        const method = branchId ? 'PATCH' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(branchData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert(`Branch ${branchId ? 'updated' : 'created'} successfully!`, 'success');
+          closeBranchModal();
+          loadBranches();
+        } else {
+          showAlert(result.message || 'Failed to save branch');
+        }
+      } catch (error) {
+        console.error('Error saving branch:', error);
+        showAlert('Error saving branch. Please try again.');
+      }
+    }
+
+    // Delete branch
+    async function deleteBranch(branchId, branchName) {
+      if (!confirm(`Delete branch "${branchName}"? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/branches/${branchId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        if (response.ok) {
+          showAlert('Branch deleted successfully', 'success');
+          loadBranches();
+        } else {
+          showAlert('Failed to delete branch');
+        }
+      } catch (error) {
+        console.error('Error deleting branch:', error);
+        showAlert('Error deleting branch');
+      }
+    }
+
+    // ============= SETTINGS =============
+
+    function saveSettings() {
+      showAlert('Settings saved successfully!', 'success');
+    }
+
+    function exportData() {
+      showAlert('Data export initiated. You will receive a download link shortly.', 'success');
+    }
+
+    function confirmClearLogs() {
+      if (confirm('Clear all logs older than 90 days? This cannot be undone.')) {
+        showAlert('Old logs cleared successfully', 'success');
+      }
+    }
+
+    // Initialize
+    if (checkAuth()) {
+      loadUserInfo();
+      loadUsers();
+    }
+  </script>
+
+
+
+
+</body>
+</html>
