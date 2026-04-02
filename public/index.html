@@ -598,7 +598,6 @@
 
 <body>
 
-
   <header>
     <div class="header-left">
       <h1><i class="fas fa-chart-line"></i> VeriSage</h1>
@@ -804,9 +803,17 @@
   <script>
 
     const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
+    const originalLoadForms = loadForms;
     let authToken = localStorage.getItem('authToken');
     let currentFilter = 'all';
     let allForms = [];
+    
+    // Global variables for bulk batch
+    let eligibleFormsCount = 0;
+    let isBulkProcessing = false;
+
+    // Profile dropdown functionality
+    let currentUserData = null;
 
     // Check authentication
     function checkAuth() {
@@ -1042,25 +1049,6 @@
       });
     });
 
-    // Initialize
-    if (checkAuth()) {
-      loadUserInfo();
-      loadForms(); 
-      loadUserProfile();
-    }
-
-    // Auto-refresh every 30 seconds
-    setInterval(() => {
-      if (checkAuth()) {
-        loadForms(currentFilter);
-      }
-    }, 30000);
-
-  
-    // Global variables for bulk batch
-    let eligibleFormsCount = 0;
-    let isBulkProcessing = false;
-
     // Check eligible forms count when on Reviewed tab
     async function checkEligibleForms() {
       if (currentFilter !== 'reviewed') {
@@ -1098,7 +1086,7 @@
     }
 
     // VERSION with auto-download handling
-   async function generateBulkBatch() {
+    async function generateBulkBatch() {
       if (isBulkProcessing) return;
       
       if (!confirm(`Generate a single CSV batch file for all ${eligibleFormsCount} reviewed forms?\n\nThis will mark them as POSTED.`)) {
@@ -1206,23 +1194,20 @@
     });
 
     // Call checkEligibleForms after initial load if on reviewed tab
-  const originalLoadForms = loadForms;
     loadForms = async function(status = 'all') {
       await originalLoadForms(status);
       if (status === 'reviewed') {
         setTimeout(checkEligibleForms, 500);
       }
-
-      // Profile dropdown functionality
-      let currentUserData = null;
+    };
       
-      function toggleProfileDropdown() {
+    function toggleProfileDropdown() {
         const dropdown = document.getElementById('profileDropdown');
         dropdown.classList.toggle('show');
       }
       
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(event) {
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('profileDropdown');
         const userInfo = document.querySelector('.user-info');
         
@@ -1231,8 +1216,8 @@
         }
       });
       
-      // Load user profile into dropdown
-      async function loadUserProfile() {
+    // Load user profile into dropdown
+    async function loadUserProfile() {
         try {
           const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1262,8 +1247,8 @@
         }
       }
       
-      // Profile modal functions
-      function openProfileModal() {
+    // Profile modal functions
+    function openProfileModal() {
         document.getElementById('profileDropdown').classList.remove('show');
         
         if (currentUserData) {
@@ -1275,11 +1260,11 @@
         document.getElementById('profileModal').classList.add('show');
       }
       
-      function closeProfileModal() {
+    function closeProfileModal() {
         document.getElementById('profileModal').classList.remove('show');
       }
       
-      async function saveProfile(event) {
+    async function saveProfile(event) {
         event.preventDefault();
         
         const updates = {
@@ -1312,18 +1297,18 @@
         }
       }
       
-      // Password modal functions
-      function openPasswordModal() {
+    // Password modal functions
+    function openPasswordModal() {
         document.getElementById('profileDropdown').classList.remove('show');
         document.getElementById('passwordForm').reset();
         document.getElementById('passwordModal').classList.add('show');
       }
       
-      function closePasswordModal() {
+    function closePasswordModal() {
         document.getElementById('passwordModal').classList.remove('show');
       }
       
-      async function changePassword(event) {
+    async function changePassword(event) {
         event.preventDefault();
         
         const currentPassword = document.getElementById('currentPassword').value;
@@ -1383,12 +1368,21 @@
         }
       }
       
-     
-
-    };
-
-
+    // Initialize
+    if (checkAuth()) {
+      loadUserInfo();
+      loadForms(); 
+      loadUserProfile();
+    }
     
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      if (checkAuth()) {
+        loadForms(currentFilter);
+      }
+    }, 30000);
+    
+
 
   </script>
 
