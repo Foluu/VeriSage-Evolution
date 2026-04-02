@@ -534,7 +534,7 @@ router.get('/bulk/eligible-count', authMiddleware, async (req, res) => {
 // POST /api/forms/bulk/generate-batch
 router.post('/bulk/generate-batch', authMiddleware, async (req, res) => {
   try {
-    // Find all eligible forms
+    // Find all eligible forms- Both unreviewed and reviewed forms that haven't been posted yet
     const eligibleForms = await Form.find({
       status: { $in: ['reviewed', 'unreviewed'] },
       batchId: { $exists: false }
