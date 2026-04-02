@@ -604,16 +604,8 @@
       <h1><i class="fas fa-chart-line"></i> VeriSage</h1>
     </div>
     
-    <div class="header-nav" style="display: flex; gap: 1rem; align-items: center;">
-      <button class="nav-link" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
-        <i class="fas fa-home"></i> Dashboard
-      </button>
-      <button class="nav-link" onclick="window.location.href='audit.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
-        <i class="fas fa-shield-alt"></i> Audit & Security
-      </button>
-      <button class="nav-link" onclick="window.location.href='config.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
-        <i class="fas fa-cog"></i> Configuration
-      </button>
+    <div class="header-nav" id="mainNavigation" style="display: flex; gap: 1rem; align-items: center;">
+      <!-- Navigation will be populated by JavaScript based on user role -->
     </div>
     
     <div class="header-right">
@@ -851,16 +843,63 @@
             'Authorization': `Bearer ${authToken}`
           }
         });
-
+    
         if (response.ok) {
           const result = await response.json();
-          document.getElementById('userName').textContent = result.user.name;
+          const user = result.user;
+          
+          document.getElementById('userName').textContent = user.name;
+          localStorage.setItem('user', JSON.stringify(user));
+          
+          // Show/hide navigation based on role
+          updateNavigationForRole(user.role);
+          
         } else {
           logout();
         }
       } catch (error) {
         console.error('Error loading user info:', error);
       }
+    }
+    
+    // New function to update navigation based on user role
+    function updateNavigationForRole(role) {
+      const headerNav = document.querySelector('.header-nav');
+      
+      if (!headerNav) return;
+      
+      if (role === 'admin') {
+        // Admin sees all navigation
+        headerNav.innerHTML = `
+          <button class="nav-link" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-home"></i> Dashboard
+          </button>
+          <button class="nav-link" onclick="window.location.href='audit.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-shield-alt"></i> Audit & Security
+          </button>
+          <button class="nav-link" onclick="window.location.href='config.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-cog"></i> Configuration
+          </button>
+        `;
+      } else {
+        // Viewers only see dashboard
+        headerNav.innerHTML = `
+          <button class="nav-link" onclick="window.location.href='index.html'" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
+            <i class="fas fa-home"></i> Dashboard
+          </button>
+        `;
+      }
+      
+      // Add hover styles
+      const navLinks = headerNav.querySelectorAll('.nav-link');
+      navLinks.forEach(link => {
+        link.addEventListener('mouseenter', function() {
+          this.style.background = 'rgba(255,255,255,0.3)';
+        });
+        link.addEventListener('mouseleave', function() {
+          this.style.background = 'rgba(255,255,255,0.2)';
+        });
+      });
     }
 
     // Load forms

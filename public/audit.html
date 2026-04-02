@@ -993,56 +993,226 @@
       }
     }
 
-    // Load overview data
+   // Load overview data with real statistics
     async function loadOverviewData() {
       try {
-        // Load statistics (simulated for now - will need backend endpoints)
-        document.getElementById('totalUsers').textContent = '12';
-        document.getElementById('loginEvents24h').textContent = '47';
-        document.getElementById('formSubmissions24h').textContent = '23';
-        document.getElementById('activeSessions').textContent = '5';
-
+        // Fetch real statistics from the backend
+        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+    
+        if (response.ok) {
+          const result = await response.json();
+          const stats = result.data;
+          
+          // Update statistics
+          document.getElementById('totalUsers').textContent = stats.users.total;
+          
+          // For now, we'll calculate these from forms
+          // You can add specific endpoints later for these metrics
+          document.getElementById('loginEvents24h').textContent = '-';
+          document.getElementById('formSubmissions24h').textContent = '-';
+          document.getElementById('activeSessions').textContent = stats.users.active;
+        }
+    
         // Load recent activity
-        loadRecentActivity();
+        await loadRecentActivity();
+        
       } catch (error) {
         console.error('Error loading overview:', error);
       }
     }
-
-    // Load recent activity (simulated)
-    function loadRecentActivity() {
+    
+    // Load recent activity from actual forms
+    async function loadRecentActivity() {
       const tbody = document.getElementById('recentActivityTable');
       
-      // Simulated data - replace with actual API call
-      const activities = [
-        {
-          timestamp: new Date().toLocaleString(),
-          user: 'Admin User',
-          action: 'Form Review',
-          resource: 'AJAH - DECEMBER',
-          status: 'success'
-        },
-        {
-          timestamp: new Date(Date.now() - 3600000).toLocaleString(),
-          user: 'John Doe',
-          action: 'Login',
-          resource: 'System',
-          status: 'success'
+      try {
+        // Fetch recent forms
+        const response = await fetch(`${API_BASE_URL}/forms?limit=10`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+    
+        if (response.ok) {
+          const result = await response.json();
+          const forms = result.data;
+          
+          if (forms.length === 0) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>No recent activity</p>
+                  </div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+    
+          tbody.innerHTML = forms.map(form => {
+            const action = form.status === 'posted' ? 'Form Posted' : 
+                          form.status === 'reviewed' ? 'Form Reviewed' : 
+                          'Form Submitted';
+            const statusClass = form.status === 'posted' ? 'success' : 
+                              form.status === 'reviewed' ? 'info' : 
+                              'warning';
+            
+            return `
+              <tr>
+                <td>${new Date(form.submittedAt).toLocaleString()}</td>
+                <td>${form.reportPreparedBy || 'Branch Submission'}</td>
+                <td>${action}</td>
+                <td>${form.branch} - ${form.month}</td>
+                <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
+              </tr>
+            `;
+          }).join('');
+          
+        } else {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <p>Error loading activity</p>
+                </div>
+              </td>
+            </tr>
+          `;
         }
-      ];
-
-      tbody.innerHTML = activities.map(act => `
-        <tr>
-          <td>${act.timestamp}</td>
-          <td>${act.user}</td>
-          <td>${act.action}</td>
-          <td>${act.resource}</td>
-          <td><span class="badge ${act.status}">${act.status.toUpperCase()}</span></td>
-        </tr>
-      `).join('');
+        
+      } catch (error) {
+        console.error('Error loading recent activity:', error);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <p>Error loading activity</p>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
     }
-
-    // Load audit logs (simulated)
+    
+    // Load active users with real data
+    async function loadActiveUsers() {
+      const container = document.getElementById('usersList');
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/users`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+    
+        if (response.ok) {
+          const result = await response.json();
+          const users = result.data.filter(u => u.isActive);
+          
+          if (users.length === 0) {
+            container.innerHTML = `
+              <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <p>No active users found</p>
+              </div>
+            `;
+            return;
+          }
+    
+          container.innerHTML = users.map(user => `
+            <div class="user-card">
+              <h4>${user.name}</h4>
+              <div class="info"><i class="fas fa-user"></i> ${user.username}</div>
+              <div class="info"><i class="fas fa-envelope"></i> ${user.email}</div>
+              <div class="info"><i class="fas fa-calendar"></i> Created: ${new Date(user.createdAt).toLocaleDateString()}</div>
+              <span class="badge ${user.role === 'admin' ? 'danger' : 'info'} role">
+                ${user.role === 'admin' ? '🛡️ ADMIN' : '👁️ VIEWER'}
+              </span>
+            </div>
+          `).join('');
+          
+        } else {
+          container.innerHTML = `
+            <div class="empty-state">
+              <p>Error loading users</p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error('Error loading users:', error);
+        container.innerHTML = `
+          <div class="empty-state">
+            <p>Error loading users</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Load security data with real statistics
+    async function loadSecurityData() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+    
+        if (response.ok) {
+          const result = await response.json();
+          const stats = result.data;
+          
+          // Update with real data where available
+          document.getElementById('failedLogins').textContent = '0'; // Will need separate tracking
+          document.getElementById('passwordChanges').textContent = '0'; // Will need separate tracking
+          document.getElementById('apiRequests').textContent = '-'; // Will need separate tracking
+          
+          // Additional info
+          const formsStats = stats.forms;
+          const statsInfo = document.querySelector('#securityTab .stats-grid');
+          
+          // Add a new stat card for total forms
+          const existingCards = statsInfo.querySelectorAll('.stat-card').length;
+          if (existingCards === 4) {
+            // We haven't added the forms card yet
+            const formsCard = document.createElement('div');
+            formsCard.className = 'stat-card';
+            formsCard.innerHTML = `
+              <h3>Total Forms</h3>
+              <div class="value">${formsStats.total}</div>
+            `;
+            statsInfo.appendChild(formsCard);
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error loading security data:', error);
+      }
+    }
+    
+    // Update the filter function to show message
+    function filterAuditLogs() {
+      const actionFilter = document.getElementById('actionFilter').value;
+      const dateFrom = document.getElementById('dateFrom').value;
+      const dateTo = document.getElementById('dateTo').value;
+    
+      console.log('Filtering:', { actionFilter, dateFrom, dateTo });
+      
+      const tbody = document.getElementById('auditLogsTable');
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fas fa-info-circle"></i>
+              <p>Audit logging system is being implemented</p>
+              <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                This will track all user actions including logins, form submissions, and administrative changes.
+              </p>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+    
+    // Update audit logs to show implementation message
     function loadAuditLogs() {
       const tbody = document.getElementById('auditLogsTable');
       
@@ -1051,62 +1221,49 @@
           <td colspan="7">
             <div class="empty-state">
               <i class="fas fa-clipboard-list"></i>
-              <p>Audit logging will be available after backend implementation</p>
+              <p>Audit Logging System</p>
+              <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                The comprehensive audit logging system is being implemented.<br>
+                This will include detailed tracking of all system activities.
+              </p>
             </div>
           </td>
         </tr>
       `;
     }
-
-    // Load active users
-    async function loadActiveUsers() {
-      const container = document.getElementById('usersList');
-      
+    
+    // Enhanced statistics with form breakdown
+    async function loadEnhancedStats() {
       try {
-        // This will need a backend endpoint - for now showing simulated data
-        const users = [
-          {
-            name: 'System Administrator',
-            username: 'admin',
-            email: 'admin@trem.com',
-            role: 'admin',
-            lastLogin: new Date().toLocaleString()
-          }
-        ];
-
-        container.innerHTML = users.map(user => `
-          <div class="user-card">
-            <h4>${user.name}</h4>
-            <div class="info"><i class="fas fa-user"></i> ${user.username}</div>
-            <div class="info"><i class="fas fa-envelope"></i> ${user.email}</div>
-            <div class="info"><i class="fas fa-clock"></i> Last login: ${user.lastLogin}</div>
-            <span class="badge info role">${user.role.toUpperCase()}</span>
-          </div>
-        `).join('');
+        const [statsResponse, formsResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/admin/stats`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          }),
+          fetch(`${API_BASE_URL}/forms?limit=100`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          })
+        ]);
+    
+        if (statsResponse.ok && formsResponse.ok) {
+          const statsData = await statsResponse.json();
+          const formsData = await formsResponse.json();
+          
+          // Calculate 24-hour metrics
+          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          const forms24h = formsData.data.filter(f => 
+            new Date(f.submittedAt) > yesterday
+          );
+          
+          // Update the display
+          document.getElementById('formSubmissions24h').textContent = forms24h.length;
+          document.getElementById('loginEvents24h').textContent = '-'; // Needs separate tracking
+        }
       } catch (error) {
-        console.error('Error loading users:', error);
-        container.innerHTML = '<div class="empty-state"><p>Error loading users</p></div>';
+        console.error('Error loading enhanced stats:', error);
       }
     }
-
-    // Load security data
-    function loadSecurityData() {
-      document.getElementById('failedLogins').textContent = '3';
-      document.getElementById('passwordChanges').textContent = '0';
-      document.getElementById('apiRequests').textContent = '1,247';
-    }
-
-    // Filter audit logs
-    function filterAuditLogs() {
-      const actionFilter = document.getElementById('actionFilter').value;
-      const dateFrom = document.getElementById('dateFrom').value;
-      const dateTo = document.getElementById('dateTo').value;
-
-      console.log('Filtering:', { actionFilter, dateFrom, dateTo });
-      showAlert('Filter applied (backend implementation pending)', 'success');
-    }
-
-          // Profile dropdown functionality
+    
+      // Profile dropdown functionality
       let currentUserData = null;
       
       function toggleProfileDropdown() {
@@ -1275,16 +1432,99 @@
           showAlert('Network error. Please try again.');
         }
       }
-     
 
-    // Initialize
-    if (checkAuth()) {
-      loadUserInfo();
-      loadOverviewData();  
-      loadUserProfile();
-    }
+      // Enhanced authentication check with role verification
+      async function checkAuthAndRole() {
+        if (!authToken) {
+          window.location.href = 'login.html';
+          return false;
+        }
+      
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+      
+          if (!response.ok) {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+            return false;
+          }
+      
+          const result = await response.json();
+          const user = result.user;
+      
+          // Store user data
+          localStorage.setItem('user', JSON.stringify(user));
+      
+          // Check if user is admin
+          if (user.role !== 'admin') {
+            // Show error message
+            document.body.innerHTML = `
+              <div style="
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                background: #f5f6fa;
+                padding: 2rem;
+                text-align: center;
+              ">
+                <div style="
+                  background: white;
+                  padding: 3rem;
+                  border-radius: 15px;
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                  max-width: 500px;
+                ">
+                  <i class="fas fa-lock" style="font-size: 4rem; color: #dc3545; margin-bottom: 1rem;"></i>
+                  <h1 style="color: #333; margin-bottom: 1rem;">Access Denied</h1>
+                  <p style="color: #666; margin-bottom: 2rem;">
+                    This page is only accessible to administrators. Your current role is <strong>${user.role}</strong>.
+                  </p>
+                  <button onclick="window.location.href='index.html'" style="
+                    padding: 0.75rem 2rem;
+                    background: linear-gradient(to right, #FFA000, #f26522);
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    font-weight: 600;
+                  ">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                  </button>
+                </div>
+              </div>
+            `;
+            return false;
+          }
+      
+          return true;
+      
+        } catch (error) {
+          console.error('Auth check error:', error);
+          window.location.href = 'login.html';
+          return false;
+        }
+      }
+      
+      // Initialize page
+      (async function() {
+        const hasAccess = await checkAuthAndRole();
+        if (hasAccess) {
+          loadUserInfo();
+          // Load page-specific data here
+          // For audit.html: loadOverviewData();
+          // For config.html: loadUsers();
+        }
+      })();
+ 
 
-    
+      loadEnhancedStats();
+
   </script>
 
 
