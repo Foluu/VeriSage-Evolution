@@ -725,6 +725,115 @@ router.get('/meta/zones', async (req, res) => {
 });
 
 
+// @route   POST /api/forms/:id/review
+// @desc    Mark form as reviewed (toggle review status)
+// @access  Private (All authenticated users)
+router.post('/:id/review', authMiddleware, async (req, res) => {
+  try {
+    const form = await Form.findById(req.params.id);
+    
+    if (!form) {
+      return res.status(404).json({
+        success: false,
+        message: 'Form not found'
+      });
+    }
+ 
+    // Don't allow reviewing posted forms
+    if (form.status === 'posted') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot review a posted form'
+      });
+    }
+ 
+    // Toggle review status
+    const newReviewStatus = !form.isReviewed;
+    
+    form.isReviewed = newReviewStatus;
+    
+    if (newReviewStatus) {
+      // Marking as reviewed
+      form.status = 'reviewed';
+      form.reviewedAt = new Date();
+      form.reviewedBy = req.user._id;
+    } else {
+      // Unmarking review
+      form.status = 'unreviewed';
+      form.reviewedAt = null;
+      form.reviewedBy = null;
+    }
+ 
+    await form.save();
+ 
+    // Populate reviewer info for response
+    await form.populate('reviewedBy', 'name username email');
+ 
+    res.json({
+      success: true,
+      message: newReviewStatus ? 'Form marked as reviewed' : 'Form unmarked as reviewed',
+      data: form
+    });
+ 
+  } catch (error) {
+    console.error('Review form error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error reviewing form'
+    });
+  }
+});
+ 
+// @route   PATCH /api/forms/:id
+// @desc    Update form (ADMIN ONLY - removed for regular users)
+// @access  Private (Admin only)
+router.patch('/:id', authMiddleware, requireAdmin, async (req, res) => {
+  try {
+    const form = await Form.findById(req.params.id);
+    
+    if (!form) {
+      return res.status(404).json({
+        success: false,
+        message: 'Form not found'
+      });
+    }
+ 
+    // Don't allow editing posted forms
+    if (form.status === 'posted') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot edit a posted form'
+      });
+    }
+ 
+    // Filter and apply updates
+    const updates = filterFilledFields(req.body);
+    
+    // Remove review-related fields from updates (managed separately)
+    delete updates.isReviewed;
+    delete updates.reviewedBy;
+    delete updates.status;
+    delete updates.reviewedAt;
+    
+    Object.assign(form, updates);
+    await form.save();
+ 
+    res.json({
+      success: true,
+      message: 'Form updated successfully',
+      data: form
+    });
+ 
+  } catch (error) {
+    console.error('Update form error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error updating form'
+    });
+  }
+});
+ 
+
 
 
 

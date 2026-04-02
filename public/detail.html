@@ -287,6 +287,42 @@
       opacity: 0.9;
       font-size: 0.9rem;
     }
+ 
+    .review-section {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+      border-left: 4px solid #007bff;
+    }
+    
+    .review-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      font-size: 1.1rem;
+      user-select: none;
+    }
+    
+    .review-checkbox-label input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      accent-color: #28a745;
+    }
+    
+    .review-info {
+      margin-top: 0.5rem;
+      color: #666;
+      font-size: 0.9rem;
+      margin-left: 2.5rem;
+    }
+    
+    .review-info i {
+      margin-right: 0.5rem;
+    }
+
   </style>
   
 </head>
@@ -421,11 +457,17 @@
     function displayFormDetails(form) {
       const totals = calculateTotals(form);
       
-      // Render fields
+      // Check if current user is admin
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const isAdmin = currentUser.role === 'admin';
+      
+      // Render fields (same as before, but all disabled)
       const fields = Object.entries(form)
         .filter(([key, value]) =>
           !key.startsWith('_') &&
           key !== 'status' &&
+          key !== 'isReviewed' &&
+          key !== 'reviewedBy' &&
           key !== 'batchFileUrl' &&
           key !== 'createdAt' &&
           key !== 'updatedAt' &&
@@ -439,94 +481,73 @@
             .replace(/([A-Z])/g, ' $1')
             .replace(/^./, s => s.toUpperCase())
             .trim();
-
-          const editable = isEditableField(key, value);
+    
           const isLongText = typeof value === 'string' && value.length > 60;
           const isNumber = typeof value === 'number';
-
-          // Render attachments as images
-        if (key === 'attachments' && Array.isArray(value) && value.length) {
-          const images = value.map(file => {
-            const src = file.path.startsWith('http')
-              ? file.path
-              : `https://verisage-evolution.onrender.com${file.path}`;
-
+    
+          // Render attachments
+          if (key === 'attachments' && Array.isArray(value) && value.length) {
+            const images = value.map(file => {
+              const src = file.path.startsWith('http')
+                ? file.path
+                : `https://verisage-evolution.onrender.com${file.path}`;
+    
+              return `
+                <a href="${src}" target="_blank">
+                  <img 
+                    src="${src}" 
+                    alt="${file.filename}" 
+                    style="max-width:150px; max-height:150px; object-fit:cover; border-radius:8px; margin:5px; border:1px solid #ddd;"
+                  />
+                </a>
+              `;
+            }).join('');
+    
             return `
-              <a href="${src}" target="_blank">
-                <img 
-                  src="${src}" 
-                  alt="${file.filename}" 
-                  style="max-width:150px; max-height:150px; object-fit:cover; border-radius:8px; margin:5px; border:1px solid #ddd;"
-                />
-              </a>
-            `;
-          }).join('');
-
-          const label = 'Attachments';
-
-          return `
-            <div class="field" style="grid-column: 1 / -1;">
-              <label>${label}</label>
-              <div class="value" style="display:flex; flex-wrap:wrap; gap:10px;">
-                ${images}
-              </div>
-            </div>
-          `;
-        }
-
-          if (!editable) {
-            let displayValue = value;
-            if (value instanceof Date || key.includes('At')) {
-              displayValue = new Date(value).toLocaleString();
-            }
-            
-            return `
-              <div class="field">
+              <div class="field" style="grid-column: 1 / -1;">
                 <label>${label}</label>
-                <div class="value">${displayValue}</div>
+                <div class="value" style="display:flex; flex-wrap:wrap; gap:10px;">
+                  ${images}
+                </div>
               </div>
             `;
           }
-
-          // Editable fields
+    
+          // All fields are now read-only (no editing)
+          if (value instanceof Date || key.includes('At')) {
+            return `
+              <div class="field">
+                <label>${label}</label>
+                <div class="value">${new Date(value).toLocaleString()}</div>
+              </div>
+            `;
+          }
+    
           if (isLongText) {
             return `
               <div class="field">
                 <label>${label}</label>
-                <textarea
-                  class="value-input"
-                  data-field="${key}"
-                  data-original="${value}"
-                  disabled
-                >${value}</textarea>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="field">
-                <label>${label}</label>
-                <input
-                  class="value-input"
-                  type="${isNumber ? 'number' : 'text'}"
-                  step="${isNumber ? '0.01' : ''}"
-                  data-field="${key}"
-                  value="${value}"
-                  data-original="${value}"
-                  disabled
-                />
+                <div class="value">${value}</div>
               </div>
             `;
           }
+    
+          return `
+            <div class="field">
+              <label>${label}</label>
+              <div class="value">${value}</div>
+            </div>
+          `;
         })
         .join('');
-
+    
       const content = `
         <div class="card">
           <div class="card-header">
             <h2><i class="fas fa-file-invoice"></i> ${form.branch} - ${form.month}</h2>
             <span class="status-badge ${form.status}">${form.status.toUpperCase()}</span>
           </div>
-
+    
           <div class="summary-grid">
             <div class="summary-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
               <h3>${formatCurrency(totals.totalIncome)}</h3>
@@ -541,42 +562,99 @@
               <p>Balance (Petty Cash)</p>
             </div>
           </div>
-
+    
+          ${form.status !== 'posted' ? `
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; border-left: 4px solid #007bff;">
+              <label style="display: flex; align-items: center; gap: 1rem; cursor: pointer; font-size: 1.1rem;">
+                <input 
+                  type="checkbox" 
+                  id="reviewCheckbox" 
+                  ${form.isReviewed ? 'checked' : ''}
+                  style="width: 24px; height: 24px; cursor: pointer;"
+                  onchange="toggleReviewStatus()"
+                />
+                <span style="font-weight: 600; color: #333;">
+                  <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                  Mark as Reviewed
+                </span>
+              </label>
+              ${form.reviewedBy ? `
+                <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem; margin-left: 2.5rem;">
+                  <i class="fas fa-user"></i> Reviewed by: ${form.reviewedBy.name || 'Unknown'}
+                  ${form.reviewedAt ? `on ${new Date(form.reviewedAt).toLocaleString()}` : ''}
+                </p>
+              ` : ''}
+            </div>
+          ` : ''}
+    
           <div class="field-group">
             ${fields}
           </div>
-
+    
           <div class="actions">
             ${form.status === 'posted' && form.batchFileUrl ? `
               <button class="btn-success" onclick="downloadBatch()">
                 <i class="fas fa-download"></i> Download CSV File
               </button>
             ` : `
-              <button class="btn-primary" id="generateBtn" onclick="generateBatch()">
-                <i class="fas fa-file-csv"></i> Generate CSV Batch File
-              </button>
+              ${isAdmin ? `
+                <button class="btn-primary" id="generateBtn" onclick="generateBatch()">
+                  <i class="fas fa-file-csv"></i> Generate CSV Batch File
+                </button>
+              ` : ''}
             `}
             
-            ${form.status !== 'posted' ? `
-              <button class="btn-secondary" id="editBtn" onclick="toggleEditMode()">
-                <i class="fas fa-edit"></i> Edit Form
-              </button>
-              <button class="btn-info" id="saveBtn" onclick="saveForm()" style="display:none">
-                <i class="fas fa-save"></i> Save Changes
-              </button>
-              <button class="btn-secondary" id="cancelBtn" onclick="cancelEdit()" style="display:none">
-                <i class="fas fa-times"></i> Cancel
+            ${isAdmin && form.status !== 'posted' ? `
+              <button class="btn-secondary" onclick="window.location.href='detail.html?id=${form._id}&edit=true'">
+                <i class="fas fa-edit"></i> Edit Form (Admin)
               </button>
             ` : ''}
             
-            <button class="btn-danger" onclick="if(confirm('Delete this form? This cannot be undone.')) deleteForm()">
-              <i class="fas fa-trash"></i> Delete Form
-            </button>
+            ${isAdmin ? `
+              <button class="btn-danger" onclick="if(confirm('Delete this form? This cannot be undone.')) deleteForm()">
+                <i class="fas fa-trash"></i> Delete Form
+              </button>
+            ` : ''}
           </div>
         </div>
       `;
-
+    
       document.getElementById('formContent').innerHTML = content;
+    }
+    
+    // NEW: Toggle review status function
+    async function toggleReviewStatus() {
+      const checkbox = document.getElementById('reviewCheckbox');
+      const originalState = !checkbox.checked;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/forms/${formId}/review`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+    
+        const result = await response.json();
+    
+        if (result.success) {
+          showAlert(result.message, 'success');
+          // Reload form to show updated status and reviewer info
+          setTimeout(() => {
+            loadFormDetails();
+          }, 1000);
+        } else {
+          // Revert checkbox on error
+          checkbox.checked = originalState;
+          showAlert(result.message || 'Failed to update review status');
+        }
+    
+      } catch (error) {
+        console.error('Review toggle error:', error);
+        checkbox.checked = originalState;
+        showAlert('Network error. Please try again.');
+      }
     }
 
     // Toggle edit mode

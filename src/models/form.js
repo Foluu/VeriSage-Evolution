@@ -69,7 +69,7 @@ const formSchema = new mongoose.Schema({
   // Additional Information
   confirmationOfPayment: { type: String },
   numberOfFullTimePastors: { type: Number, default: 0 },
-
+ 
   // Image Attachments 
   attachments: [{
     filename: { type: String, required: true },
@@ -86,24 +86,32 @@ const formSchema = new mongoose.Schema({
     enum: ['unreviewed', 'reviewed', 'posted'],
     default: 'unreviewed'
   },
-
+ 
+  // NEW: Review tracking
+  isReviewed: {
+    type: Boolean,
+    default: false
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+ 
   batchFileUrl: { type: String },
-  batchId: { type: String }, // ID of the bulk batch this form was exported in
-  batchedAt: { type: Date }, // When this form was included in a bulk batch
+  batchId: { type: String },
+  batchedAt: { type: Date },
   submittedAt: { type: Date, default: Date.now },
   reviewedAt: { type: Date },
   postedAt: { type: Date }
 }, {
   timestamps: true
-
 });
-
-
+ 
 // Index for quick queries
 formSchema.index({ status: 1, submittedAt: -1 });
 formSchema.index({ branch: 1, month: 1 });
-formSchema.index({ batchId: 1 }); // Index for bulk batch queries
-
+formSchema.index({ batchId: 1 });
+formSchema.index({ isReviewed: 1 });
 
 
 
