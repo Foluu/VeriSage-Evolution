@@ -64,173 +64,307 @@
       gap: 0.5rem;
     }
 
+    /* User Menu Styles */
     .user-menu {
-  position: relative;
-}
- 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  transition: background 0.3s;
-}
- 
-.user-info:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
- 
-.profile-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  min-width: 280px;
-  z-index: 1000;
-  display: none;
-  overflow: hidden;
-}
- 
-.profile-dropdown.show {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
- 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
- 
-.dropdown-header {
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
- 
-.user-avatar {
-  flex-shrink: 0;
-}
- 
-.user-details {
-  flex: 1;
-}
- 
-.user-name {
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 0.3rem;
-}
- 
-.user-email {
-  font-size: 0.85rem;
-  opacity: 0.9;
-  margin-bottom: 0.5rem;
-}
- 
-.user-role-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
- 
-.dropdown-divider {
-  height: 1px;
-  background: #e0e0e0;
-  margin: 0.5rem 0;
-}
- 
-.dropdown-item {
-  width: 100%;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: #333;
-  font-size: 0.95rem;
-  transition: background 0.2s;
-  font-family: 'Poppins', Arial, sans-serif;
-}
- 
-.dropdown-item:hover {
-  background: #f8f9fa;
-}
- 
-.dropdown-item i {
-  width: 20px;
-  color: #666;
-}
- 
-.dropdown-item.logout-item {
-  color: #dc3545;
-}
- 
-.dropdown-item.logout-item i {
-  color: #dc3545;
-}
- 
-.dropdown-item.logout-item:hover {
-  background: #fff5f5;
-}
- 
-/* Modal adjustments */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 2rem; /* ADDED: Top/bottom padding */
-}
- 
-.modal-overlay.show {
-  display: flex;
-}
- 
-.modal {
-  background: white;
-  border-radius: 15px;
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh; /* ADDED: Max height */
-  overflow-y: auto; /* ADDED: Scroll if needed */
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  margin: auto; /* ADDED: Center vertically */
-}
- 
-/* Close dropdown when clicking outside */
-@media (max-width: 768px) {
-  .profile-dropdown {
-    right: -1rem;
-    min-width: 260px;
-  }
-}
+      position: relative;
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    
+    .user-info:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      min-width: 280px;
+      z-index: 1000;
+      display: none;
+      overflow: hidden;
+    }
+    
+    .profile-dropdown.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .dropdown-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .user-avatar {
+      flex-shrink: 0;
+    }
+    
+    .user-details {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .user-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.3rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-email {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .user-role-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .dropdown-divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 0.5rem 0;
+    }
+    
+    .dropdown-item {
+      width: 100%;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: none;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #333;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+    
+    .dropdown-item:hover {
+      background: #f8f9fa;
+    }
+    
+    .dropdown-item i {
+      width: 20px;
+      color: #666;
+    }
+    
+    .dropdown-item.logout-item {
+      color: #dc3545;
+    }
+    
+    .dropdown-item.logout-item i {
+      color: #dc3545;
+    }
+    
+    .dropdown-item.logout-item:hover {
+      background: #fff5f5;
+    }
+    
+    /* Profile Modal Styles - CRITICAL FIX */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 2rem;
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-header h3 {
+      color: #333;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:hover {
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: 'Poppins', Arial, sans-serif;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #f26522;
+    }
+    
+    .form-group input:disabled {
+      background: #f8f9fa;
+      cursor: not-allowed;
+    }
+    
+    .form-group small {
+      display: block;
+      margin-top: 0.25rem;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: 'Poppins', Arial, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(242, 101, 34, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
+    @media (max-width: 768px) {
+      .profile-dropdown {
+        right: -1rem;
+        min-width: 260px;
+      }
+      
+      .modal {
+        width: 95%;
+        padding: 1.5rem;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+
 
     .logout-btn {
       background: rgba(255, 255, 255, 0.2);
@@ -907,6 +1041,9 @@
   <script>
     const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
     let authToken = localStorage.getItem('authToken');
+    
+    // Profile dropdown functionality
+    let currentUserData = null;
 
     // Check authentication
     function checkAuth() {
@@ -1263,16 +1400,13 @@
       }
     }
     
-      // Profile dropdown functionality
-      let currentUserData = null;
-      
-      function toggleProfileDropdown() {
+    function toggleProfileDropdown() {
         const dropdown = document.getElementById('profileDropdown');
         dropdown.classList.toggle('show');
       }
       
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(event) {
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('profileDropdown');
         const userInfo = document.querySelector('.user-info');
         
@@ -1281,8 +1415,8 @@
         }
       });
       
-      // Load user profile into dropdown
-      async function loadUserProfile() {
+    // Load user profile into dropdown
+    async function loadUserProfile() {
         try {
           const response = await fetch(`${API_BASE_URL}/auth/me`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
@@ -1312,8 +1446,8 @@
         }
       }
       
-      // Profile modal functions
-      function openProfileModal() {
+    // Profile modal functions
+    function openProfileModal() {
         document.getElementById('profileDropdown').classList.remove('show');
         
         if (currentUserData) {
@@ -1325,11 +1459,11 @@
         document.getElementById('profileModal').classList.add('show');
       }
       
-      function closeProfileModal() {
+    function closeProfileModal() {
         document.getElementById('profileModal').classList.remove('show');
       }
       
-      async function saveProfile(event) {
+    async function saveProfile(event) {
         event.preventDefault();
         
         const updates = {
@@ -1362,18 +1496,18 @@
         }
       }
       
-      // Password modal functions
-      function openPasswordModal() {
+    // Password modal functions
+    function openPasswordModal() {
         document.getElementById('profileDropdown').classList.remove('show');
         document.getElementById('passwordForm').reset();
         document.getElementById('passwordModal').classList.add('show');
       }
       
-      function closePasswordModal() {
+    function closePasswordModal() {
         document.getElementById('passwordModal').classList.remove('show');
       }
       
-      async function changePassword(event) {
+    async function changePassword(event) {
         event.preventDefault();
         
         const currentPassword = document.getElementById('currentPassword').value;
@@ -1433,8 +1567,8 @@
         }
       }
 
-      // Enhanced authentication check with role verification
-      async function checkAuthAndRole() {
+    // Enhanced authentication check with role verification
+    async function checkAuthAndRole() {
         if (!authToken) {
           window.location.href = 'login.html';
           return false;
@@ -1511,8 +1645,8 @@
         }
       }
       
-      // Initialize page
-      (async function() {
+    // Initialize page
+    (async function() {
         const hasAccess = await checkAuthAndRole();
         if (hasAccess) {
           loadUserInfo();
@@ -1523,7 +1657,7 @@
       })();
  
 
-      loadEnhancedStats();
+    loadEnhancedStats();
 
   </script>
 

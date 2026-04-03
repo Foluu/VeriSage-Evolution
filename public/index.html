@@ -74,10 +74,11 @@
       gap: 0.5rem;
     }
 
+    /* User Menu Styles */
     .user-menu {
-  position: relative;
-}
- 
+      position: relative;
+    }
+    
     .user-info {
       display: flex;
       align-items: center;
@@ -136,18 +137,23 @@
     
     .user-details {
       flex: 1;
+      min-width: 0;
     }
     
     .user-name {
       font-weight: 600;
       font-size: 1.1rem;
       margin-bottom: 0.3rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .user-email {
       font-size: 0.85rem;
       opacity: 0.9;
       margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
     .user-role-badge {
@@ -203,7 +209,7 @@
       background: #fff5f5;
     }
     
-    /* Modal adjustments */
+    /* Profile Modal Styles - CRITICAL FIX */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -215,7 +221,7 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      padding: 2rem; /* ADDED: Top/bottom padding */
+      padding: 2rem;
     }
     
     .modal-overlay.show {
@@ -228,19 +234,147 @@
       padding: 2rem;
       max-width: 500px;
       width: 90%;
-      max-height: 90vh; /* ADDED: Max height */
-      overflow-y: auto; /* ADDED: Scroll if needed */
+      max-height: 90vh;
+      overflow-y: auto;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      margin: auto; /* ADDED: Center vertically */
     }
     
-    /* Close dropdown when clicking outside */
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-header h3 {
+      color: #333;
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #999;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:hover {
+      color: #333;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-family: 'Poppins', Arial, sans-serif;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #f26522;
+    }
+    
+    .form-group input:disabled {
+      background: #f8f9fa;
+      cursor: not-allowed;
+    }
+    
+    .form-group small {
+      display: block;
+      margin-top: 0.25rem;
+      color: #666;
+      font-size: 0.85rem;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+      font-family: 'Poppins', Arial, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(to right, #FFA000, #f26522);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(242, 101, 34, 0.3);
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+    
     @media (max-width: 768px) {
       .profile-dropdown {
         right: -1rem;
         min-width: 260px;
       }
+      
+      .modal {
+        width: 95%;
+        padding: 1.5rem;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
     }
+
 
     .logout-btn {
       background: rgba(255, 255, 255, 0.2);
