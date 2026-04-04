@@ -969,55 +969,32 @@
         <div class="card-header">
           <h2><i class="fas fa-sliders-h"></i> System Settings</h2>
         </div>
-
+    
         <div class="form-group">
           <label>Maximum File Upload Size (MB)</label>
           <input type="number" id="maxFileSize" value="5" min="1" max="50">
         </div>
-
+    
         <div class="form-group">
           <label>Session Timeout (days)</label>
           <input type="number" id="sessionTimeout" value="7" min="1" max="30">
         </div>
-
+    
         <div class="form-group">
           <label>Auto-logout Inactive Users (minutes)</label>
           <input type="number" id="autoLogout" value="60" min="15" max="240">
         </div>
-
+    
         <div class="form-group">
           <label>System Email</label>
           <input type="email" id="systemEmail" value="admin@trem.com">
         </div>
-
+    
         <button class="btn btn-success" onclick="saveSettings()">
           <i class="fas fa-save"></i> Save Settings
         </button>
       </div>
-
-      <div class="card">
-        <div class="card-header">
-          <h2><i class="fas fa-database"></i> Database Management</h2>
-        </div>
-
-        <p style="color: #666; margin-bottom: 1.5rem;">
-          Manage database backups and system maintenance tasks.
-        </p>
-
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-          <button class="btn btn-primary" onclick="exportData()">
-            <i class="fas fa-download"></i> Export All Data
-          </button>
-          <button class="btn btn-secondary" onclick="alert('Backup initiated')">
-            <i class="fas fa-save"></i> Create Backup
-          </button>
-          <button class="btn btn-danger" onclick="confirmClearLogs()">
-            <i class="fas fa-trash"></i> Clear Old Logs
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
 
 
   <!-- User Modal -->
@@ -1538,7 +1515,22 @@
     // ============= SETTINGS =============
 
     function saveSettings() {
+      // Get values
+      const maxFileSize = document.getElementById('maxFileSize').value;
+      const sessionTimeout = document.getElementById('sessionTimeout').value;
+      const autoLogout = document.getElementById('autoLogout').value;
+      const systemEmail = document.getElementById('systemEmail').value;
+      
+      // For now, just show success message
+      // In production, you would save these to environment variables or database
       showAlert('Settings saved successfully!', 'success');
+      
+      console.log('Settings:', {
+        maxFileSize,
+        sessionTimeout,
+        autoLogout,
+        systemEmail
+      });
     }
 
     function exportData() {
