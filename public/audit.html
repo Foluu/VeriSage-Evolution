@@ -661,6 +661,7 @@
 
 <body>
 
+  <!-- Header -->
   <header>
     <div class="header-left">
       <button class="back-btn" onclick="window.location.href='index.html'">
@@ -783,6 +784,8 @@
       </div>
     </div>
   </header>
+  <!-- End of Header -->
+
 
   <div class="container">
     <div class="page-header">
@@ -796,9 +799,9 @@
       <div class="tab active" data-tab="overview">
         <i class="fas fa-chart-line"></i> Overview
       </div>
-      <div class="tab" data-tab="audit-logs">
+      <!-- <div class="tab" data-tab="audit-logs">
         <i class="fas fa-clipboard-list"></i> Audit Logs
-      </div>
+      </div> -->
       <div class="tab" data-tab="users">
         <i class="fas fa-users"></i> Active Users
       </div>
@@ -806,6 +809,8 @@
         <i class="fas fa-lock"></i> Security
       </div>
     </div>
+
+
 
     <!-- Overview Tab -->
     <div id="overviewTab" class="tab-content">
@@ -867,6 +872,8 @@
         </table>
       </div>
     </div>
+
+
 
     <!-- Audit Logs Tab -->
     <div id="auditLogsTab" class="tab-content" style="display: none;">
@@ -935,6 +942,8 @@
       </div>
     </div>
 
+
+
     <!-- Active Users Tab -->
     <div id="usersTab" class="tab-content" style="display: none;">
       <div class="card">
@@ -951,6 +960,9 @@
       </div>
     </div>
 
+
+
+
     <!-- Security Tab -->
     <div id="securityTab" class="tab-content" style="display: none;">
       <div class="card">
@@ -958,7 +970,7 @@
           <h2><i class="fas fa-lock"></i> Security Information</h2>
         </div>
 
-        <div class="stats-grid">
+        <!-- <div class="stats-grid">
           <div class="stat-card">
             <h3>Failed Login Attempts (24h)</h3>
             <div class="value" id="failedLogins">0</div>
@@ -975,7 +987,8 @@
             <h3>System Uptime</h3>
             <div class="value" style="font-size: 1.5rem;">99.9%</div>
           </div>
-        </div>
+        </div> -->
+
 
         <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-top: 2rem;">
           <h3 style="margin-bottom: 1rem;">
@@ -993,6 +1006,9 @@
       </div>
     </div>
   </div>
+
+
+
 
   <script>
     const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';
@@ -1580,6 +1596,9 @@
     })();
 
   </script>
+
+
+
 
 </body>
 </html>
