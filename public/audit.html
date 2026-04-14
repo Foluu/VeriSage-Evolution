@@ -1131,15 +1131,17 @@
       }
     }
 
+    
     // Load recent activity from actual forms
     async function loadRecentActivity() {
       const tbody = document.getElementById('recentActivityTable');
       
       try {
+        // Fetch recent forms
         const response = await fetch(`${API_BASE_URL}/forms?limit=10`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
+    
         if (response.ok) {
           const result = await response.json();
           const forms = result.data;
@@ -1157,14 +1159,14 @@
             `;
             return;
           }
-
+    
           tbody.innerHTML = forms.map(form => {
             const action = form.status === 'posted' ? 'Form Posted' : 
                           form.status === 'reviewed' ? 'Form Reviewed' : 
                           'Form Submitted';
             const statusClass = form.status === 'posted' ? 'success' : 
-                               form.status === 'reviewed' ? 'info' : 
-                               'warning';
+                              form.status === 'reviewed' ? 'info' : 
+                              'warning';
             
             return `
               <tr>
@@ -1202,6 +1204,7 @@
         `;
       }
     }
+
 
     // Load active users with real data
     async function loadActiveUsers() {
