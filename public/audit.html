@@ -822,13 +822,7 @@
             <i class="fas fa-arrow-up"></i> Active accounts
           </div>
         </div>
-        <!-- <div class="stat-card">
-          <h3>Login Events (24h)</h3>
-          <div class="value" id="loginEvents24h">0</div>
-          <div class="trend">
-            <i class="fas fa-clock"></i> Last 24 hours
-          </div>
-        </div> -->
+
         <div class="stat-card">
           <h3>Total Forms Submitted</h3>
           <div class="value" id="formSubmissions24h">0</div>
@@ -836,40 +830,46 @@
             <i class="fas fa-file-alt"></i> All time submissions
           </div>
         </div>
-        <!-- <div class="stat-card">
-          <h3>Active Sessions</h3>
-          <div class="value" id="activeSessions">1</div>
-          <div class="trend">
-            <i class="fas fa-users"></i> Currently logged in
-          </div>
-        </div> -->
+
       </div>
 
-    <div class="card">
-      <div class="card-header">
-        <h2><i class="fas fa-chart-bar"></i> System Overview</h2>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Value</th>
-            <th>Status</th>
-            <th>Last Updated</th>
-          </tr>
-        </thead>
-        <tbody id="recentActivityTable">
-          <tr>
-            <td colspan="4">
-              <div class="loading">
-                <div class="loader"></div>
-                <p>Loading system overview...</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+        <!-- Hardcoded System Overview Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fas fa-chart-bar"></i> System Overview</h2>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Status</th>
+                <!-- <th>Last Updated</th> -->
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>System Status</td>
+                <td>Operational</td>
+                <td><span class="badge success">ACTIVE</span></td>
+                <!-- <td>Just now</td> -->
+              </tr>
+              <tr>
+                <td>Database Connection</td>
+                <td>Connected</td>
+                <td><span class="badge success">ONLINE</span></td>
+                <!-- <td>Just now</td> -->
+              </tr>
+              <tr>
+                <td>API Endpoints</td>
+                <td>Available</td>
+                <td><span class="badge success">RESPONSIVE</span></td>
+                <!-- <td>Just now</td> -->
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
     </div>
 
 
