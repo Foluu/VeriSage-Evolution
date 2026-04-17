@@ -1016,7 +1016,7 @@
     
     // Profile dropdown functionality
     let currentUserData = null;
-
+ 
     // Check authentication
     function checkAuth() {
       if (!authToken) {
@@ -1025,7 +1025,7 @@
       }
       return true;
     }
-
+ 
     // Show alert
     function showAlert(message, type = 'error') {
       const alertBox = document.getElementById('alertBox');
@@ -1036,21 +1036,21 @@
         alertBox.classList.remove('show');
       }, 5000);
     }
-
+ 
     // Logout
     function logout() {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       window.location.href = 'login.html';
     }
-
+ 
     // Load user info
     async function loadUserInfo() {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/me`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
+ 
         if (response.ok) {
           const result = await response.json();
           document.getElementById('userName').textContent = result.user.name;
@@ -1061,29 +1061,29 @@
         console.error('Error loading user info:', error);
       }
     }
-
+ 
     // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
         // Remove active class from all tabs
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-
+ 
         // Hide all tab contents
         document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
-
+ 
         // Show selected tab content
         const tabName = tab.dataset.tab;
         const tabContent = document.getElementById(`${tabName.replace('-', '')}Tab`);
         if (tabContent) {
           tabContent.style.display = 'block';
         }
-
+ 
         // Load data for the selected tab
         loadTabData(tabName);
       });
     });
-
+ 
     // Load tab data
     function loadTabData(tabName) {
       switch(tabName) {
@@ -1101,98 +1101,94 @@
           break;
       }
     }
-
-    // FIXED: Load overview data with CORRECT active sessions count
+ 
+    // FIXED: Load overview data
     async function loadOverviewData() {
       try {
         const response = await fetch(`${API_BASE_URL}/admin/stats`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
+ 
         if (response.ok) {
           const result = await response.json();
           const stats = result.data;
           
           // Update statistics
           document.getElementById('totalUsers').textContent = stats.users.total;
-          
-          // FIXED: Active Sessions shows 1 (current user) instead of total active users
           document.getElementById('activeSessions').textContent = '1';
-          
-          // Calculate login events - for now showing actual form submissions
-          await loadEnhancedStats();
         }
-
-        // Load recent activity
-        await loadRecentActivity();
+ 
+        // Load recent activity AND enhanced stats together
+        await Promise.all([
+          loadRecentActivity(),
+          loadEnhancedStats()
+        ]);
         
       } catch (error) {
         console.error('Error loading overview:', error);
       }
     }
-
-    
-    // Load recent activity from actual forms
+ 
+    // FIXED: Load recent activity from actual forms in last 24 hours
     async function loadRecentActivity() {
       const tbody = document.getElementById('recentActivityTable');
       
       try {
-        // Fetch recent forms
-        const response = await fetch(`${API_BASE_URL}/forms?limit=10`, {
+        // Fetch ALL forms (we'll filter client-side for 24 hours)
+        const response = await fetch(`${API_BASE_URL}/forms?limit=100`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-    
-        if (response.ok) {
-          const result = await response.json();
-          if (!result.success) {
-            throw new Error(result.message || 'Failed to fetch forms');
-          }
-          const forms = Array.isArray(result.data) ? result.data : [];
-          
-          if (forms.length === 0) {
-            tbody.innerHTML = `
-              <tr>
-                <td colspan="5">
-                  <div class="empty-state">
-                    <i class="fas fa-inbox"></i>
-                    <p>No recent activity</p>
-                  </div>
-                </td>
-              </tr>
-            `;
-            return;
-          }
-    
-          tbody.innerHTML = forms.map(form => {
-            const action = form.status === 'posted' ? 'Form Posted' : 
-                          form.status === 'reviewed' ? 'Form Reviewed' : 
-                          'Form Submitted';
-            const statusClass = form.status === 'posted' ? 'success' : 
-                              form.status === 'reviewed' ? 'info' : 
-                              'warning';
-            
-            return `
-              <tr>
-                <td>${new Date(form.submittedAt).toLocaleString()}</td>
-                <td>${form.reportPreparedBy || 'Branch Submission'}</td>
-                <td>${action}</td>
-                <td>${form.branch} - ${form.month}</td>
-                <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
-              </tr>
-            `;
-          }).join('');
-          
-        } else {
+ 
+        if (!response.ok) {
+          throw new Error('Failed to fetch forms');
+        }
+ 
+        const result = await response.json();
+        
+        if (!result.success || !Array.isArray(result.data)) {
+          throw new Error('Invalid response format');
+        }
+ 
+        const allForms = result.data;
+        
+        // Filter forms from last 24 hours
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const recentForms = allForms.filter(f => 
+          new Date(f.submittedAt) > yesterday
+        ).slice(0, 10); // Get top 10 most recent
+        
+        if (recentForms.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="5">
                 <div class="empty-state">
-                  <p>Error loading activity</p>
+                  <i class="fas fa-inbox"></i>
+                  <p>No activity in the last 24 hours</p>
                 </div>
               </td>
             </tr>
           `;
+          return;
         }
+ 
+        tbody.innerHTML = recentForms.map(form => {
+          const action = form.status === 'posted' ? 'Form Posted' : 
+                        form.status === 'reviewed' ? 'Form Reviewed' : 
+                        'Form Submitted';
+          const statusClass = form.status === 'posted' ? 'success' : 
+                             form.status === 'reviewed' ? 'info' : 
+                             'warning';
+          
+          return `
+            <tr>
+              <td>${new Date(form.submittedAt).toLocaleString()}</td>
+              <td>${form.reportPreparedBy || 'Branch Submission'}</td>
+              <td>${action}</td>
+              <td>${form.branch} - ${form.month}</td>
+              <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
+            </tr>
+          `;
+        }).join('');
         
       } catch (error) {
         console.error('Error loading recent activity:', error);
@@ -1200,15 +1196,15 @@
           <tr>
             <td colspan="5">
               <div class="empty-state">
-                <p>Error loading activity</p>
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Error loading activity: ${error.message}</p>
               </div>
             </td>
           </tr>
         `;
       }
     }
-
-
+ 
     // Load active users with real data
     async function loadActiveUsers() {
       const container = document.getElementById('usersList');
@@ -1217,7 +1213,7 @@
         const response = await fetch(`${API_BASE_URL}/admin/users`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
+ 
         if (response.ok) {
           const result = await response.json();
           const users = result.data.filter(u => u.isActive);
@@ -1231,7 +1227,7 @@
             `;
             return;
           }
-
+ 
           container.innerHTML = users.map(user => `
             <div class="user-card">
               <h4>${user.name}</h4>
@@ -1261,14 +1257,14 @@
         `;
       }
     }
-
+ 
     // Load security data with real statistics
     async function loadSecurityData() {
       try {
         const response = await fetch(`${API_BASE_URL}/admin/stats`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
+ 
         if (response.ok) {
           const result = await response.json();
           const stats = result.data;
@@ -1283,8 +1279,8 @@
         console.error('Error loading security data:', error);
       }
     }
-
-    // FIXED: Audit logs now show implementation message instead of blank
+ 
+    // Show audit logs implementation message
     function loadAuditLogs() {
       const tbody = document.getElementById('auditLogsTable');
       
@@ -1305,47 +1301,53 @@
         </tr>
       `;
     }
-
+ 
     // Filter audit logs
     function filterAuditLogs() {
       const actionFilter = document.getElementById('actionFilter').value;
       const dateFrom = document.getElementById('dateFrom').value;
       const dateTo = document.getElementById('dateTo').value;
-
+ 
       console.log('Filtering:', { actionFilter, dateFrom, dateTo });
       
       // Still show implementation message
       loadAuditLogs();
     }
-
-    // FIXED: Enhanced statistics with actual 24-hour form count and login events
+ 
+    // FIXED: Enhanced statistics with actual 24-hour form count
     async function loadEnhancedStats() {
       try {
         const formsResponse = await fetch(`${API_BASE_URL}/forms?limit=100`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
-
-        if (formsResponse.ok) {
-          const formsData = await formsResponse.json();
-          
-          // Calculate 24-hour metrics
-          const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-          const forms24h = formsData.data.filter(f => 
-            new Date(f.submittedAt) > yesterday
-          );
-          
-          // Update the display
-          document.getElementById('formSubmissions24h').textContent = forms24h.length;
-          
-          // FIXED: Login events now shows form submissions as a proxy
-          // (In production, you'd track actual logins separately)
-          document.getElementById('loginEvents24h').textContent = forms24h.length > 0 ? forms24h.length : '0';
+ 
+        if (!formsResponse.ok) {
+          throw new Error('Failed to fetch forms for stats');
         }
+ 
+        const formsData = await formsResponse.json();
+        
+        if (!formsData.success || !Array.isArray(formsData.data)) {
+          throw new Error('Invalid forms data format');
+        }
+        
+        // Calculate 24-hour metrics
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const forms24h = formsData.data.filter(f => 
+          new Date(f.submittedAt) > yesterday
+        );
+        
+        // Update the display
+        document.getElementById('formSubmissions24h').textContent = forms24h.length;
+        document.getElementById('loginEvents24h').textContent = forms24h.length;
+        
       } catch (error) {
         console.error('Error loading enhanced stats:', error);
+        document.getElementById('formSubmissions24h').textContent = '0';
+        document.getElementById('loginEvents24h').textContent = '0';
       }
     }
-
+ 
     function toggleProfileDropdown() {
       const dropdown = document.getElementById('profileDropdown');
       dropdown.classList.toggle('show');
@@ -1512,7 +1514,7 @@
         showAlert('Network error. Please try again.');
       }
     }
-
+ 
     // Enhanced authentication check with role verification
     async function checkAuthAndRole() {
       if (!authToken) {
@@ -1566,7 +1568,7 @@
                 </p>
                 <button onclick="window.location.href='index.html'" style="
                   padding: 0.75rem 2rem;
-                  background: linear-gradient(to right, #f4686d, #ed3237);
+                  background: linear-gradient(to right, #FFA000, #f26522);
                   color: white;
                   border: none;
                   border-radius: 8px;
@@ -1600,7 +1602,7 @@
         loadOverviewData();
       }
     })();
-
+ 
   </script>
 
 

@@ -263,6 +263,7 @@ router.post('/',
   }
 );
 
+
 // @route   GET /api/forms
 // @desc    List all forms with filtering and pagination
 // @access  Private (HQ users)
@@ -288,17 +289,18 @@ router.get('/', authMiddleware, async (req, res) => {
         { officialEmail: new RegExp(search, 'i') }
       ];
     }
-
+ 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const [forms, total] = await Promise.all([
       Form.find(query)
+        .populate('reviewedBy', 'name username email') 
         .sort({ submittedAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
       Form.countDocuments(query)
     ]);
-
+ 
     res.json({
       success: true,
       data: forms,
@@ -309,7 +311,7 @@ router.get('/', authMiddleware, async (req, res) => {
         pages: Math.ceil(total / parseInt(limit))
       }
     });
-
+ 
   } catch (error) {
     console.error('List forms error:', error);
     res.status(500).json({
@@ -318,13 +320,14 @@ router.get('/', authMiddleware, async (req, res) => {
     });
   }
 });
-
+ 
 // @route   GET /api/forms/:id
 // @desc    Get single form details
 // @access  Private
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const form = await Form.findById(req.params.id);
+    const form = await Form.findById(req.params.id)
+      .populate('reviewedBy', 'name username email'); 
     
     if (!form) {
       return res.status(404).json({
@@ -332,12 +335,12 @@ router.get('/:id', authMiddleware, async (req, res) => {
         message: 'Form not found'
       });
     }
-
+ 
     res.json({
       success: true,
       data: form
     });
-
+ 
   } catch (error) {
     console.error('Get form error:', error);
     res.status(500).json({
@@ -346,6 +349,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     });
   }
 });
+ 
 
 // @route   GET /api/forms/:id/attachments/:filename
 // @desc    Download a specific attachment
