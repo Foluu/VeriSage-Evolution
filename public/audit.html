@@ -856,7 +856,7 @@
             <th>Email</th>
             <th>Forms Reviewed</th>
             <th>Status</th>
-            <th>Last Activity</th>
+            <th>Last Updated</th>
           </tr>
         </thead>
         <tbody id="recentActivityTable">
@@ -1102,7 +1102,7 @@
       }
     }
  
-    // FIXED: Load overview data
+        // FIXED: Load overview data
     async function loadOverviewData() {
       try {
         const response = await fetch(`${API_BASE_URL}/admin/stats`, {
@@ -1113,12 +1113,20 @@
           const result = await response.json();
           const stats = result.data;
           
-          // Update statistics
-          document.getElementById('totalUsers').textContent = stats.users.total;
-          document.getElementById('activeSessions').textContent = '1';
+          // Update statistics with error checking
+          const totalUsersElement = document.getElementById('totalUsers');
+          const activeSessionsElement = document.getElementById('activeSessions');
+          
+          if (totalUsersElement) {
+            totalUsersElement.textContent = stats.users.total;
+          }
+          
+          if (activeSessionsElement) {
+            activeSessionsElement.textContent = '1';
+          }
         }
 
-        // Load enhanced stats (total forms count)
+        // Load enhanced stats for total forms count
         await loadEnhancedStats();
         
       } catch (error) {
@@ -1146,13 +1154,25 @@
             totalForms = result.data.total;
           } else if (result.pagination && result.pagination.total !== undefined) {
             totalForms = result.pagination.total;
+          } else {
+            // Fallback: manually count if needed
+            totalForms = Array.isArray(result.data) ? result.data.length : 0;
           }
           
-          document.getElementById('formSubmissions24h').textContent = totalForms;
+          // Safely update the form submissions counter
+          const formSubmissionsElement = document.getElementById('formSubmissions24h');
+          if (formSubmissionsElement) {
+            formSubmissionsElement.textContent = totalForms;
+          } else {
+            console.warn('Element with ID "formSubmissions24h" not found');
+          }
         }
       } catch (error) {
         console.error('Error loading enhanced stats:', error);
-        document.getElementById('formSubmissions24h').textContent = '0';
+        const formSubmissionsElement = document.getElementById('formSubmissions24h');
+        if (formSubmissionsElement) {
+          formSubmissionsElement.textContent = '0';
+        }
       }
     }
 
@@ -1188,31 +1208,35 @@
           forms = formsResult.data;
         } else if (formsResult.data && Array.isArray(formsResult.data.forms)) {
           forms = formsResult.data.forms;
+        } else if (formsResult.data && Array.isArray(formsResult.data.data)) {
+          forms = formsResult.data.data;
         }
 
         // Count reviewed forms by user
         forms.forEach(form => {
-          if (form.isReviewed && form.reviewedBy) {
-            const reviewerId = form.reviewedBy._id || form.reviewedBy;
-            if (!reviewStats[reviewerId]) {
-              reviewStats[reviewerId] = {
-                userId: reviewerId,
-                name: 'Unknown User',
-                email: '',
-                reviewCount: 0
-              };
+          if ((form.isReviewed || form.status === 'reviewed') && form.reviewedBy) {
+            const reviewerId = typeof form.reviewedBy === 'object' ? form.reviewedBy._id : form.reviewedBy;
+            if (reviewerId) {
+              if (!reviewStats[reviewerId]) {
+                reviewStats[reviewerId] = {
+                  userId: reviewerId,
+                  name: 'Unknown User',
+                  email: '',
+                  reviewCount: 0
+                };
+              }
+              reviewStats[reviewerId].reviewCount++;
             }
-            reviewStats[reviewerId].reviewCount++;
           }
         });
 
         // Match user data with review stats
-        const users = usersResult.data;
+        const users = Array.isArray(usersResult.data) ? usersResult.data : [];
         Object.values(reviewStats).forEach(stat => {
           const user = users.find(u => u._id === stat.userId);
           if (user) {
-            stat.name = user.name;
-            stat.email = user.email;
+            stat.name = user.name || 'Unknown';
+            stat.email = user.email || 'No email';
           }
         });
 
@@ -1222,27 +1246,33 @@
           .sort((a, b) => b.reviewCount - a.reviewCount);
 
         if (statsArray.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-check"></i><p>No review activity found</p></div></td></tr>`;
+          if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-check"></i><p>No review activity found</p></div></td></tr>`;
+          }
           return;
         }
 
         // Display reviewer statistics
-        tbody.innerHTML = statsArray.map(stat => `
-          <tr>
-            <td>${stat.name}</td>
-            <td>${stat.email || 'No email'}</td>
-            <td>${stat.reviewCount}</td>
-            <td><span class="badge success">${stat.reviewCount} forms reviewed</span></td>
-            <td>${new Date().toLocaleDateString()}</td>
-          </tr>
-        `).join('');
+        if (tbody) {
+          tbody.innerHTML = statsArray.map(stat => `
+            <tr>
+              <td>${stat.name}</td>
+              <td>${stat.email}</td>
+              <td>${stat.reviewCount}</td>
+              <td><span class="badge success">${stat.reviewCount} forms</span></td>
+              <td>${new Date().toLocaleDateString()}</td>
+            </tr>
+          `).join('');
+        }
 
       } catch (error) {
         console.error('Error loading reviewer stats:', error);
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div></td></tr>`;
+        if (tbody) {
+          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div></td></tr>`;
+        }
       }
     }
- 
+
     // Load active users with real data
     async function loadActiveUsers() {
       const container = document.getElementById('usersList');
