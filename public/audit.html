@@ -830,7 +830,7 @@
           </div>
         </div> -->
         <div class="stat-card">
-          <h3>Form Submissions (24h)</h3>
+          <h3>Form Submissions (This Month)</h3>
           <div class="value" id="formSubmissions24h">0</div>
           <div class="trend">
             <i class="fas fa-file-alt"></i> Recent activity
@@ -1129,75 +1129,70 @@
       }
     }
  
-    // Load recent activity from actual forms in last 24 hours
+    // Load recent activity from actual forms in last month
     async function loadRecentActivity() {
       const tbody = document.getElementById('recentActivityTable');
-      
+
       try {
-        // Fetch ALL forms (we'll filter client-side for 24 hours)
-        const response = await fetch(`${API_BASE_URL}/forms?limit=100`, {
+        // Fetch most recent 10 forms — no limit param, use what the API returns
+        const response = await fetch(`${API_BASE_URL}/forms`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
- 
-        if (!response.ok) {
-          throw new Error('Failed to fetch forms');
-        }
- 
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
         const result = await response.json();
-        
-        // Support both { success, data } and plain array responses
-        const allForms = Array.isArray(result)
-          ? result
-          : Array.isArray(result.data)
-            ? result.data
-            : [];
-        
-        // Filter forms from last 24 hours
-        // Use submittedAt with fallback to createdAt (whichever field the API returns)
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const recentForms = allForms.filter(f => {
-          const dateStr = f.submittedAt || f.createdAt || f.date;
-          return dateStr && new Date(dateStr) > yesterday;
-        }).slice(0, 10); // Show top 10 most recent
-        
-        // Also update the stat card count from here (avoids a second fetch)
+
+        // API returns { success, data: [...], pagination: {...} }
+        const allForms = result.success && Array.isArray(result.data)
+          ? result.data
+          : [];
+
+        // Take up to 10 most recent (API already sorts by newest first)
+        const recentForms = allForms.slice(0, 10);
+
+        // Update the stat card — count forms submitted this month
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const thisMonthCount = allForms.filter(f => {
+          const d = new Date(f.submittedAt);
+          return d >= startOfMonth;
+        }).length;
+
         const countEl = document.getElementById('formSubmissions24h');
-        if (countEl) countEl.textContent = recentForms.length;
-        
+        if (countEl) countEl.textContent = thisMonthCount;
+
         if (recentForms.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="5">
                 <div class="empty-state">
                   <i class="fas fa-inbox"></i>
-                  <p>No activity in the last 24 hours</p>
+                  <p>No forms found</p>
                 </div>
               </td>
-            </tr>
-          `;
+            </tr>`;
           return;
         }
- 
+
         tbody.innerHTML = recentForms.map(form => {
-          const action = form.status === 'posted' ? 'Form Posted' : 
-                        form.status === 'reviewed' ? 'Form Reviewed' : 
-                        'Form Submitted';
-          const statusClass = form.status === 'posted' ? 'success' : 
-                             form.status === 'reviewed' ? 'info' : 
-                             'warning';
-          const dateStr = form.submittedAt || form.createdAt || form.date;
-          
+          const action = form.status === 'posted' ? 'Form Posted'
+                      : form.status === 'reviewed' ? 'Form Reviewed'
+                      : 'Form Submitted';
+          const statusClass = form.status === 'posted' ? 'success'
+                            : form.status === 'reviewed' ? 'info'
+                            : 'warning';
+
           return `
             <tr>
-              <td>${dateStr ? new Date(dateStr).toLocaleString() : '—'}</td>
+              <td>${new Date(form.submittedAt).toLocaleString()}</td>
               <td>${form.reportPreparedBy || 'Branch Submission'}</td>
               <td>${action}</td>
-              <td>${form.branch || '—'} - ${form.month || '—'}</td>
-              <td><span class="badge ${statusClass}">${(form.status || 'submitted').toUpperCase()}</span></td>
-            </tr>
-          `;
+              <td>${form.branch || '—'} – ${form.month || '—'}</td>
+              <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
+            </tr>`;
         }).join('');
-        
+
       } catch (error) {
         console.error('Error loading recent activity:', error);
         tbody.innerHTML = `
@@ -1208,8 +1203,7 @@
                 <p>Error loading activity: ${error.message}</p>
               </div>
             </td>
-          </tr>
-        `;
+          </tr>`;
       }
     }
  
