@@ -1134,43 +1134,79 @@
       const tbody = document.getElementById('recentActivityTable');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/forms`, {
+        // Fetch with limit and sort parameters
+        const response = await fetch(`${API_BASE_URL}/forms?limit=10&sort=-submittedAt`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
         const result = await response.json();
 
-        if (!result.success) throw new Error('Failed to load forms');
+        // More robust response handling
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-        const forms = result.data;
+        if (!result.success) {
+          throw new Error(result.message || 'Failed to load forms');
+        }
 
-        // Update count card
-        document.getElementById('formSubmissions24h').textContent = forms.length;
+        // Handle various response structures
+        let forms = [];
+        if (Array.isArray(result.data)) {
+          forms = result.data;
+        } else if (result.data && result.data.forms) {
+          forms = result.data.forms;
+        } else if (result.data && Array.isArray(result.data.data)) {
+          forms = result.data.data;
+        } else {
+          forms = [];
+        }
+
+        // Update statistics
+        const totalCount = result.pagination ? result.pagination.total : forms.length;
+        document.getElementById('formSubmissions24h').textContent = totalCount;
 
         if (forms.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><p>No forms found</p></div></td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity found</p></div></td></tr>`;
           return;
         }
 
-        tbody.innerHTML = forms.slice(0, 10).map(form => {
-          const action = form.status === 'posted' ? 'Form Posted' : form.status === 'reviewed' ? 'Form Reviewed' : 'Form Submitted';
-          const statusClass = form.status === 'posted' ? 'success' : form.status === 'reviewed' ? 'info' : 'warning';
+        tbody.innerHTML = forms.map(form => {
+          // Handle date formatting
+          const dateObj = form.submittedAt ? new Date(form.submittedAt) : new Date();
+          const formattedDate = dateObj.toLocaleString();
+          
+          // Determine action and status
+          let action = 'Form Submitted';
+          let statusClass = 'warning';
+          
+          if (form.status === 'posted') {
+            action = 'Form Posted';
+            statusClass = 'success';
+          } else if (form.status === 'reviewed' || form.isReviewed) {
+            action = 'Form Reviewed';
+            statusClass = 'info';
+          }
+          
+          const userName = form.reportPreparedBy || form.residentPastor || 'Unknown User';
+          const branchInfo = form.branch ? `${form.branch} – ${form.month || 'Unknown'}` : 'Unknown Branch';
+          
           return `
             <tr>
-              <td>${new Date(form.submittedAt).toLocaleString()}</td>
-              <td>${form.reportPreparedBy || 'Branch Submission'}</td>
+              <td>${formattedDate}</td>
+              <td>${userName}</td>
               <td>${action}</td>
-              <td>${form.branch} – ${form.month}</td>
-              <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
+              <td>${branchInfo}</td>
+              <td><span class="badge ${statusClass}">${(form.status || 'submitted').toUpperCase()}</span></td>
             </tr>`;
         }).join('');
 
       } catch (error) {
         console.error('Error loading recent activity:', error);
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading recent activity: ${error.message}</p></div></td></tr>`;
       }
     }
- 
+
     // Load active users with real data
     async function loadActiveUsers() {
       const container = document.getElementById('usersList');
