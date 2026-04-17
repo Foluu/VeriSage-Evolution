@@ -1134,56 +1134,40 @@
       const tbody = document.getElementById('recentActivityTable');
 
       try {
-        const response = await fetch(`${API_BASE_URL}/forms?limit=10&page=1`, {
+        const response = await fetch(`${API_BASE_URL}/forms`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
         const result = await response.json();
-        const forms = result.data || [];
 
-        // Update stat card with total form count from pagination
-        const countEl = document.getElementById('formSubmissions24h');
-        if (countEl) countEl.textContent = result.pagination?.total ?? forms.length;
+        if (!result.success) throw new Error('Failed to load forms');
+
+        const forms = result.data;
+
+        // Update count card
+        document.getElementById('formSubmissions24h').textContent = forms.length;
 
         if (forms.length === 0) {
-          tbody.innerHTML = `
-            <tr><td colspan="5">
-              <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>No forms found</p>
-              </div>
-            </td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><p>No forms found</p></div></td></tr>`;
           return;
         }
 
-        tbody.innerHTML = forms.map(form => {
-          const action = form.status === 'posted' ? 'Form Posted'
-                      : form.status === 'reviewed' ? 'Form Reviewed'
-                      : 'Form Submitted';
-          const statusClass = form.status === 'posted' ? 'success'
-                            : form.status === 'reviewed' ? 'info'
-                            : 'warning';
+        tbody.innerHTML = forms.slice(0, 10).map(form => {
+          const action = form.status === 'posted' ? 'Form Posted' : form.status === 'reviewed' ? 'Form Reviewed' : 'Form Submitted';
+          const statusClass = form.status === 'posted' ? 'success' : form.status === 'reviewed' ? 'info' : 'warning';
           return `
             <tr>
               <td>${new Date(form.submittedAt).toLocaleString()}</td>
               <td>${form.reportPreparedBy || 'Branch Submission'}</td>
               <td>${action}</td>
-              <td>${form.branch || '—'} – ${form.month || '—'}</td>
+              <td>${form.branch} – ${form.month}</td>
               <td><span class="badge ${statusClass}">${form.status.toUpperCase()}</span></td>
             </tr>`;
         }).join('');
 
       } catch (error) {
         console.error('Error loading recent activity:', error);
-        tbody.innerHTML = `
-          <tr><td colspan="5">
-            <div class="empty-state">
-              <i class="fas fa-exclamation-triangle"></i>
-              <p>Error loading activity: ${error.message}</p>
-            </div>
-          </td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div></td></tr>`;
       }
     }
  
