@@ -830,10 +830,10 @@
           </div>
         </div> -->
         <div class="stat-card">
-          <h3>Form Submissions (This Month)</h3>
+          <h3>Total Forms Submitted</h3>
           <div class="value" id="formSubmissions24h">0</div>
           <div class="trend">
-            <i class="fas fa-file-alt"></i> Recent activity
+            <i class="fas fa-file-alt"></i> All time submissions
           </div>
         </div>
         <!-- <div class="stat-card">
@@ -845,32 +845,32 @@
         </div> -->
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h2><i class="fas fa-history"></i> Recent Activity</h2>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Resource</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="recentActivityTable">
-            <tr>
-              <td colspan="5">
-                <div class="loading">
-                  <div class="loader"></div>
-                  <p>Loading recent activity...</p>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-user-check"></i> Reviewer Statistics</h2>
       </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Reviewer Name</th>
+            <th>Email</th>
+            <th>Forms Reviewed</th>
+            <th>Status</th>
+            <th>Last Activity</th>
+          </tr>
+        </thead>
+        <tbody id="recentActivityTable">
+          <tr>
+            <td colspan="5">
+              <div class="loading">
+                <div class="loader"></div>
+                <p>Loading reviewer statistics...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     </div>
 
 
@@ -1108,7 +1108,7 @@
         const response = await fetch(`${API_BASE_URL}/admin/stats`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
- 
+
         if (response.ok) {
           const result = await response.json();
           const stats = result.data;
@@ -1117,96 +1117,132 @@
           document.getElementById('totalUsers').textContent = stats.users.total;
           document.getElementById('activeSessions').textContent = '1';
         }
- 
-        // Load recent activity AND enhanced stats together
-        await Promise.all([
-          loadRecentActivity(),
-          loadEnhancedStats()
-        ]);
+
+        // Load enhanced stats (total forms count)
+        await loadEnhancedStats();
         
       } catch (error) {
         console.error('Error loading overview:', error);
       }
     }
- 
-    // Load recent activity from actual forms in last month
+
+    // Load enhanced statistics including total forms count
+    async function loadEnhancedStats() {
+      try {
+        // Get total forms count
+        const response = await fetch(`${API_BASE_URL}/forms`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          let totalForms = 0;
+          
+          // Handle different response structures
+          if (Array.isArray(result.data)) {
+            totalForms = result.data.length;
+          } else if (result.data && typeof result.data === 'object' && result.data.total !== undefined) {
+            totalForms = result.data.total;
+          } else if (result.pagination && result.pagination.total !== undefined) {
+            totalForms = result.pagination.total;
+          }
+          
+          document.getElementById('formSubmissions24h').textContent = totalForms;
+        }
+      } catch (error) {
+        console.error('Error loading enhanced stats:', error);
+        document.getElementById('formSubmissions24h').textContent = '0';
+      }
+    }
+
+    // NEW: Load reviewer statistics instead of recent activity
     async function loadRecentActivity() {
       const tbody = document.getElementById('recentActivityTable');
 
       try {
-        // Fetch with limit and sort parameters
-        const response = await fetch(`${API_BASE_URL}/forms?limit=10&sort=-submittedAt`, {
+        // Fetch all forms to analyze reviewer activity
+        const formsResponse = await fetch(`${API_BASE_URL}/forms`, {
           headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
-        const result = await response.json();
+        const formsResult = await formsResponse.json();
 
-        // More robust response handling
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        if (!formsResult.success) throw new Error('Failed to load forms');
 
-        if (!result.success) {
-          throw new Error(result.message || 'Failed to load forms');
-        }
+        // Fetch all users to get reviewer names
+        const usersResponse = await fetch(`${API_BASE_URL}/admin/users`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
 
-        // Handle various response structures
+        const usersResult = await usersResponse.json();
+
+        if (!usersResult.success) throw new Error('Failed to load users');
+
+        // Process forms to count reviews by user
+        const reviewStats = {};
+        
+        // Handle different forms data structures
         let forms = [];
-        if (Array.isArray(result.data)) {
-          forms = result.data;
-        } else if (result.data && result.data.forms) {
-          forms = result.data.forms;
-        } else if (result.data && Array.isArray(result.data.data)) {
-          forms = result.data.data;
-        } else {
-          forms = [];
+        if (Array.isArray(formsResult.data)) {
+          forms = formsResult.data;
+        } else if (formsResult.data && Array.isArray(formsResult.data.forms)) {
+          forms = formsResult.data.forms;
         }
 
-        // Update statistics
-        const totalCount = result.pagination ? result.pagination.total : forms.length;
-        document.getElementById('formSubmissions24h').textContent = totalCount;
+        // Count reviewed forms by user
+        forms.forEach(form => {
+          if (form.isReviewed && form.reviewedBy) {
+            const reviewerId = form.reviewedBy._id || form.reviewedBy;
+            if (!reviewStats[reviewerId]) {
+              reviewStats[reviewerId] = {
+                userId: reviewerId,
+                name: 'Unknown User',
+                email: '',
+                reviewCount: 0
+              };
+            }
+            reviewStats[reviewerId].reviewCount++;
+          }
+        });
 
-        if (forms.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-inbox"></i><p>No recent activity found</p></div></td></tr>`;
+        // Match user data with review stats
+        const users = usersResult.data;
+        Object.values(reviewStats).forEach(stat => {
+          const user = users.find(u => u._id === stat.userId);
+          if (user) {
+            stat.name = user.name;
+            stat.email = user.email;
+          }
+        });
+
+        // Convert to array and sort by review count
+        const statsArray = Object.values(reviewStats)
+          .filter(stat => stat.reviewCount > 0)
+          .sort((a, b) => b.reviewCount - a.reviewCount);
+
+        if (statsArray.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-user-check"></i><p>No review activity found</p></div></td></tr>`;
           return;
         }
 
-        tbody.innerHTML = forms.map(form => {
-          // Handle date formatting
-          const dateObj = form.submittedAt ? new Date(form.submittedAt) : new Date();
-          const formattedDate = dateObj.toLocaleString();
-          
-          // Determine action and status
-          let action = 'Form Submitted';
-          let statusClass = 'warning';
-          
-          if (form.status === 'posted') {
-            action = 'Form Posted';
-            statusClass = 'success';
-          } else if (form.status === 'reviewed' || form.isReviewed) {
-            action = 'Form Reviewed';
-            statusClass = 'info';
-          }
-          
-          const userName = form.reportPreparedBy || form.residentPastor || 'Unknown User';
-          const branchInfo = form.branch ? `${form.branch} – ${form.month || 'Unknown'}` : 'Unknown Branch';
-          
-          return `
-            <tr>
-              <td>${formattedDate}</td>
-              <td>${userName}</td>
-              <td>${action}</td>
-              <td>${branchInfo}</td>
-              <td><span class="badge ${statusClass}">${(form.status || 'submitted').toUpperCase()}</span></td>
-            </tr>`;
-        }).join('');
+        // Display reviewer statistics
+        tbody.innerHTML = statsArray.map(stat => `
+          <tr>
+            <td>${stat.name}</td>
+            <td>${stat.email || 'No email'}</td>
+            <td>${stat.reviewCount}</td>
+            <td><span class="badge success">${stat.reviewCount} forms reviewed</span></td>
+            <td>${new Date().toLocaleDateString()}</td>
+          </tr>
+        `).join('');
 
       } catch (error) {
-        console.error('Error loading recent activity:', error);
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error loading recent activity: ${error.message}</p></div></td></tr>`;
+        console.error('Error loading reviewer stats:', error);
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Error: ${error.message}</p></div></td></tr>`;
       }
     }
-
+ 
     // Load active users with real data
     async function loadActiveUsers() {
       const container = document.getElementById('usersList');
@@ -1314,12 +1350,6 @@
       
       // Still show implementation message
       loadAuditLogs();
-    }
- 
-    // Enhanced statistics count is now handled inside loadRecentActivity()
-    // to avoid a duplicate API call. This stub keeps the call in loadOverviewData() working.
-    async function loadEnhancedStats() {
-      // Count already updated by loadRecentActivity()
     }
  
     function toggleProfileDropdown() {
