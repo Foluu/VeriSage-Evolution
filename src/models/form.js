@@ -83,7 +83,7 @@ const formSchema = new mongoose.Schema({
   // System Fields
   status: {
     type: String,
-    enum: ['unreviewed', 'reviewed', 'posted'],
+    enum: ['unreviewed', 'reviewed', 'batched', 'posted'],
     default: 'unreviewed'
   },
  

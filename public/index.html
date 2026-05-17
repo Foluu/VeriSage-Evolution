@@ -508,6 +508,11 @@
       color: #004085;
     }
 
+    .status.batched {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
     .status.posted {
       background: #d4edda;
       color: #155724;
@@ -867,6 +872,9 @@
     <div class="tab" data-filter="reviewed">
       <i class="fas fa-edit"></i> Reviewed
     </div>
+    <div class="tab" data-filter="batched">
+      <i class="fas fa-file-excel"></i> Batched
+    </div>
     <div class="tab" data-filter="posted">
       <i class="fas fa-check-circle"></i> Posted
     </div>
@@ -886,13 +894,16 @@
         Unreviewed: <strong id="unreviewedCount">0</strong>
       </div>
       <div class="stat-item">
+        Batched: <strong id="batchedCount">0</strong>
+      </div>
+      <div class="stat-item">
         Posted: <strong id="postedCount">0</strong>
       </div>
     </div>
 
     <div class="bulk-actions" id="bulkActions" style="display: none; margin-left: auto;">
       <button class="btn-bulk-generate" id="bulkGenerateBtn" onclick="generateBulkBatch()" disabled>
-        <i class="fas fa-file-excel"></i> Generate Group Batch File
+        <i class="fas fa-cloud-upload-alt"></i> Post to Sage
       </button>
     </div>
 
@@ -1123,11 +1134,14 @@
     // Update statistics
     async function updateStats() {
       try {
-        const [allRes, unrevRes, postRes] = await Promise.all([
+        const [allRes, unrevRes, batchedRes, postRes] = await Promise.all([
           fetch(`${API_BASE_URL}/forms`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
           }),
           fetch(`${API_BASE_URL}/forms?status=unreviewed`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          }),
+          fetch(`${API_BASE_URL}/forms?status=batched`, {
             headers: { 'Authorization': `Bearer ${authToken}` }
           }),
           fetch(`${API_BASE_URL}/forms?status=posted`, {
@@ -1135,14 +1149,16 @@
           })
         ]);
 
-        const [allData, unrevData, postData] = await Promise.all([
+        const [allData, unrevData, batchedData, postData] = await Promise.all([
           allRes.json(),
           unrevRes.json(),
+          batchedRes.json(),
           postRes.json()
         ]);
 
         document.getElementById('totalCount').textContent = allData.pagination?.total || 0;
         document.getElementById('unreviewedCount').textContent = unrevData.pagination?.total || 0;
+        document.getElementById('batchedCount').textContent = batchedData.pagination?.total || 0;
         document.getElementById('postedCount').textContent = postData.pagination?.total || 0;
 
       } catch (error) {
@@ -1206,11 +1222,11 @@
           if (eligibleFormsCount > 0) {
             bulkActionsDiv.style.display = 'flex';
             bulkGenerateBtn.disabled = false;
-            bulkGenerateBtn.innerHTML = `<i class="fas fa-file-excel"></i> Generate Group Batch File (${eligibleFormsCount} forms)`;
+            bulkGenerateBtn.innerHTML = `<i class="fas fa-cloud-upload-alt"></i> Post to Sage (${eligibleFormsCount} forms)`;
           } else {
             bulkActionsDiv.style.display = 'flex';
             bulkGenerateBtn.disabled = true;
-            bulkGenerateBtn.innerHTML = '<i class="fas fa-file-excel"></i> No Eligible Forms';
+            bulkGenerateBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> No Eligible Forms';
           }
         }
 
@@ -1219,11 +1235,11 @@
       }
     }
 
-    // VERSION with auto-download handling
+    // VERSION with Sage integration and auto-download fallback handling
     async function generateBulkBatch() {
       if (isBulkProcessing) return;
       
-      if (!confirm(`Generate a single CSV batch file for all ${eligibleFormsCount} reviewed forms?\n\nThis will mark them as POSTED.`)) {
+      if (!confirm(`Post all ${eligibleFormsCount} reviewed forms to Sage 200 Evolution?`)) {
         return;
       }
 
@@ -1235,14 +1251,14 @@
       overlay.innerHTML = `
         <div class="processing-content">
           <div class="loader"></div>
-          <h3>Generating Bulk Batch File</h3>
+          <h3>Posting to Sage</h3>
           <p>Processing ${eligibleFormsCount} forms...</p>
         </div>
       `;
       document.body.appendChild(overlay);
 
       try {
-        const response = await fetch(`${API_BASE_URL}/forms/bulk/generate-batch`, {
+        const response = await fetch(`${API_BASE_URL}/forms/bulk/post-to-sage`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${authToken}`,
@@ -1253,10 +1269,17 @@
         const result = await response.json();
 
         if (result.success) {
+          document.body.removeChild(overlay);
+          showAlert(`✅ Successfully posted ${result.data.formsIncluded} forms to Sage!`, 'success');
+          loadForms(currentFilter);
+          checkEligibleForms();
+        } else if (result.isFallback) {
+          // Fallback scenario: Sage failed, but CSV batch was generated
           overlay.innerHTML = `
             <div class="overlay-content">
-              <h3>✅ Batch File Generated!</h3>
-              <p>${result.data.formsIncluded} forms marked as POSTED</p>
+              <h3 style="color: #ed3237;">⚠️ Sage Posting Failed</h3>
+              <p>${result.message}</p>
+              <p>Forms have been marked as <strong>BATCHED</strong>.</p>
               <p class="filename">${result.data.batchFile.filename}</p>
               <div class="actions">
                 <a 
@@ -1264,7 +1287,7 @@
                   download="${result.data.batchFile.filename}"
                   class="btn btn-primary"
                 >
-                  <i class="fas fa-download"></i> Download File
+                  <i class="fas fa-download"></i> Download Fallback File
                 </a>
                 <button class="btn btn-secondary" id="closeOverlay">
                   Close
@@ -1291,10 +1314,10 @@
             document.body.removeChild(link);
           }, 100);
           
-          showAlert(`✅ Bulk batch generated! ${result.data.formsIncluded} forms posted.`, 'success');
+          showAlert(`⚠️ Direct posting failed. Fallback batch generated for ${result.data.formsIncluded} forms.`, 'error');
         } else {
           document.body.removeChild(overlay);
-          showAlert(result.message || 'Failed to generate bulk batch');
+          showAlert(result.message || 'Failed to post to Sage');
         }
       } catch (error) {
         console.error('Error:', error);
