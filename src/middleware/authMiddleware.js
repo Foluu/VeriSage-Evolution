@@ -67,9 +67,9 @@ const authMiddleware = async (req, res, next) => {
 
 
 
-// Middleware to check if user is admin
+// Middleware to check if user is admin or superadmin
 const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') {
+  if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
     return res.status(403).json({
       success: false,
       message: 'Admin access required'
@@ -80,4 +80,17 @@ const requireAdmin = (req, res, next) => {
 
 
 
-module.exports = { authMiddleware, requireAdmin };
+// Middleware to check if user is superadmin
+const requireSuperAdmin = (req, res, next) => {
+  if (req.user.role !== 'superadmin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Superadmin access required'
+    });
+  }
+  next();
+};
+
+
+
+module.exports = { authMiddleware, requireAdmin, requireSuperAdmin };

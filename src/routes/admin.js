@@ -1,14 +1,72 @@
-
 const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const Branch = require('../models/branch');
 const AuditLog = require('../models/audit');
-const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware');
+const { authMiddleware, requireAdmin, requireSuperAdmin } = require('../middleware/authMiddleware');
 
-// All admin routes require authentication and admin role
+// All admin routes require authentication and admin/superadmin role
 router.use(authMiddleware);
 router.use(requireAdmin);
+
+// ============================================================================
+// STATISTICS ROUTES (Accessible to both Admin and Superadmin)
+// ============================================================================
+
+// @route   GET /api/admin/stats
+// @desc    Get system statistics
+// @access  Private (Admin & Superadmin)
+router.get('/stats', async (req, res) => {
+  try {
+    const Form = require('../models/form');
+    
+    const [
+      totalUsers,
+      activeUsers,
+      totalBranches,
+      totalForms,
+      unreviewedForms,
+      postedForms
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ isActive: true }),
+      Branch.countDocuments(),
+      Form.countDocuments(),
+      Form.countDocuments({ status: 'unreviewed' }),
+      Form.countDocuments({ status: 'posted' })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        users: {
+          total: totalUsers,
+          active: activeUsers,
+          inactive: totalUsers - activeUsers
+        },
+        branches: {
+          total: totalBranches
+        },
+        forms: {
+          total: totalForms,
+          unreviewed: unreviewedForms,
+          posted: postedForms,
+          reviewed: totalForms - unreviewedForms - postedForms
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error fetching statistics'
+    });
+  }
+});
+
+// All administrative routes below require strict superadmin permissions
+router.use(requireSuperAdmin);
 
 
 
@@ -399,60 +457,4 @@ router.get('/audit-logs', async (req, res) => {
 // ============================================================================
 // STATISTICS ROUTES
 // ============================================================================
-
-// @route   GET /api/admin/stats
-// @desc    Get system statistics
-// @access  Private (Admin only)
-router.get('/stats', async (req, res) => {
-  try {
-    const Form = require('../models/form');
-    
-    const [
-      totalUsers,
-      activeUsers,
-      totalBranches,
-      totalForms,
-      unreviewedForms,
-      postedForms
-    ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ isActive: true }),
-      Branch.countDocuments(),
-      Form.countDocuments(),
-      Form.countDocuments({ status: 'unreviewed' }),
-      Form.countDocuments({ status: 'posted' })
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        users: {
-          total: totalUsers,
-          active: activeUsers,
-          inactive: totalUsers - activeUsers
-        },
-        branches: {
-          total: totalBranches
-        },
-        forms: {
-          total: totalForms,
-          unreviewed: unreviewedForms,
-          posted: postedForms,
-          reviewed: totalForms - unreviewedForms - postedForms
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Get stats error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error fetching statistics'
-    });
-  }
-});
-
-
-
-
 module.exports = router;

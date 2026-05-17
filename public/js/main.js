@@ -132,6 +132,25 @@ async function loadUserInfo() {
       
       const profileEmailEl = document.getElementById('profileEmail');
       if (profileEmailEl) profileEmailEl.value = result.user.email;
+
+      // Populate dynamic main navigation based on role
+      const mainNavEl = document.getElementById('mainNavigation');
+      if (mainNavEl) {
+        const path = window.location.pathname;
+        const isDashboard = path.endsWith('index.html') || path.endsWith('/') || (!path.endsWith('audit.html') && !path.endsWith('config.html') && !path.endsWith('detail.html') && !path.endsWith('form.html'));
+        const isAudit = path.endsWith('audit.html');
+        const isConfig = path.endsWith('config.html');
+
+        let navHTML = `<a href="index.html" class="nav-link ${isDashboard ? 'active' : ''}"><i class="fas fa-th-large"></i> Dashboard</a>`;
+        
+        if (result.user.role === 'superadmin') {
+          navHTML += `
+            <a href="audit.html" class="nav-link ${isAudit ? 'active' : ''}"><i class="fas fa-history"></i> Audit Trail</a>
+            <a href="config.html" class="nav-link ${isConfig ? 'active' : ''}"><i class="fas fa-cog"></i> Configuration</a>
+          `;
+        }
+        mainNavEl.innerHTML = navHTML;
+      }
     } else {
       logout();
     }
