@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const Branch = require('../models/branch');
+const AuditLog = require('../models/audit');
 const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware');
 
 // All admin routes require authentication and admin role
@@ -339,11 +340,49 @@ router.delete('/branches/:id', async (req, res) => {
 // @access  Private (Admin only)
 router.get('/audit-logs', async (req, res) => {
   try {
-    // Placeholder - implement audit logging system
+    const { page = 1, limit = 50, action, status, search } = req.query;
+    
+    const query = {};
+    
+    if (action) {
+      query.action = action;
+    }
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    if (search) {
+      query.$or = [
+        { userName: new RegExp(search, 'i') },
+        { details: new RegExp(search, 'i') },
+        { resource: new RegExp(search, 'i') },
+        { ipAddress: new RegExp(search, 'i') }
+      ];
+    }
+    
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    
+    const [logs, total] = await Promise.all([
+      AuditLog.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate('user', 'name username email'),
+      AuditLog.countDocuments(query)
+    ]);
+    
     res.json({
       success: true,
-      data: [],
-      message: 'Audit logging not yet implemented'
+      data: logs,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
     });
   } catch (error) {
     console.error('Get audit logs error:', error);

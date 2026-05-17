@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { validateLogin } = require('../utils/validation');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { logAudit } = require('../services/auditService');
 
 // @route   POST /api/auth/login
 // @desc    Login user and return JWT token
@@ -25,6 +26,7 @@ router.post('/login', async (req, res) => {
     // Find user
     const user = await User.findOne({ username: username.toLowerCase() });
     if (!user) {
+      logAudit({ action: 'login_failed', ipAddress: req.ip, status: 'failure', details: `Failed login attempt for username: ${username}` });
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -42,6 +44,7 @@ router.post('/login', async (req, res) => {
     // Verify password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      logAudit({ action: 'login_failed', userId: user._id, userName: user.name, ipAddress: req.ip, status: 'failure', details: `Invalid password for ${username}` });
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -54,6 +57,8 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
+
+    logAudit({ action: 'login', userId: user._id, userName: user.name, ipAddress: req.ip, details: `${user.name} logged in` });
 
     res.json({
       success: true,
@@ -143,6 +148,14 @@ router.post('/register', async (req, res) => {
       message: 'Server error during registration'
     });
   }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Log the logout event
+// @access  Private
+router.post('/logout', authMiddleware, async (req, res) => {
+  logAudit({ action: 'logout', userId: req.user._id, userName: req.user.name, ipAddress: req.ip, details: `${req.user.name} logged out` });
+  res.json({ success: true, message: 'Logged out' });
 });
 
 module.exports = router;

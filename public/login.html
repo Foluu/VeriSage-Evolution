@@ -7,38 +7,27 @@
     <title>Login - VeriSage</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
+    <link rel="stylesheet" href="css/main.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Poppins', sans-serif;
-        }
-
         body {
-            background: black;
+            background: #111;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-
-
         .page-content {
-            flex: 1; /* pushes footer down */
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-
         .site-footer {
             text-align: center;
             padding: 15px 10px;
             color: #aaa;
             font-size: 0.85rem;
         }
-
-
         .login-container {
             background: white;
             border-radius: 20px;
@@ -48,7 +37,6 @@
             width: 100%;
             display: flex;
         }
-
         .login-left {
             flex: 1;
             background: linear-gradient(to right, #ef686c, #ed3237);
@@ -58,49 +46,40 @@
             flex-direction: column;
             justify-content: center;
         }
-
         .login-left h1 {
             font-size: 2.5rem;
             margin-bottom: 1rem;
         }
-
         .login-left p {
             font-size: 1.1rem;
             opacity: 0.9;
             line-height: 1.6;
         }
-
         .login-right {
             flex: 1;
             padding: 60px;
         }
-
         .login-header {
             text-align: center;
             margin-bottom: 2rem;
         }
-
         .login-header h2 {
             color: #333;
             font-size: 2rem;
             margin-bottom: 0.5rem;
         }
-
         .login-header p {
             color: #666;
         }
-
         .input-group {
             margin-bottom: 1.5rem;
         }
-
         .input-group label {
             display: block;
             margin-bottom: 0.5rem;
             color: #333;
             font-weight: 500;
         }
-
         .input-group input {
             width: 100%;
             padding: 12px 15px;
@@ -109,27 +88,22 @@
             font-size: 1rem;
             transition: border-color 0.3s;
         }
-
         .input-group input:focus {
             outline: none;
-            border-color: #f26522;
+            border-color: #ed3237;
         }
-
         .input-group input.error {
             border-color: #ed3237;
         }
-
         .error-message {
             color: #ed3237;
             font-size: 0.875rem;
             margin-top: 0.5rem;
             display: none;
         }
-
         .error-message.show {
             display: block;
         }
-
         .login-button {
             width: 100%;
             padding: 14px;
@@ -142,73 +116,28 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
         }
-
         .login-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(242, 101, 34, 0.3);
+            box-shadow: 0 5px 15px rgba(237, 50, 55, 0.3);
         }
-
         .login-button:active {
             transform: translateY(0);
         }
-
         .login-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-
-        .loader {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s ease infinite;
-        }
-
-    
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            display: none;
-        }
-
-        .alert.show {
-            display: block;
-        }
-
-        .alert.error {
-            background-color: #fee;
-            color: #c33;
-            border-left: 4px solid #c33;
-        }
-
-        .alert.success {
-            background-color: #efe;
-            color: #3c3;
-            border-left: 4px solid #3c3;
-        }
-
         @media (max-width: 768px) {
             .login-container {
                 flex-direction: column;
             }
-
             .login-left {
                 padding: 40px 30px;
             }
-
             .login-right {
                 padding: 40px 30px;
             }
-
             .login-left h1 {
                 font-size: 2rem;
             }
@@ -285,6 +214,7 @@
 
 
 
+    <script src="js/main.js"></script>
     <script>
         // Configuration
         const API_BASE_URL = 'https://verisage-evolution.onrender.com/api';

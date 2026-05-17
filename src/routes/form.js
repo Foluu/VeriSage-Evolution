@@ -9,6 +9,7 @@ const { authMiddleware, requireAdmin } = require('../middleware/authMiddleware')
 const { filterFilledFields, validateFormSubmission } = require('../utils/validation');
 const { createBatch, createBulkBatch  } = require('../services/batchGenerator');
 const Branch = require('../models/branch');
+const { logAudit } = require('../services/auditService');
 
 
 
@@ -242,6 +243,8 @@ router.post('/',
       // Save form with attachments
       await form.save();
 
+      logAudit({ action: 'form_submit', resource: 'Form', resourceId: String(form._id), ipAddress: req.ip, details: `Form submitted for ${form.branch} - ${form.month}`, metadata: { branch: form.branch, month: form.month } });
+
       res.status(201).json({
         success: true,
         message: 'Form submitted successfully',
@@ -273,7 +276,7 @@ router.get('/', authMiddleware, async (req, res) => {
     
     // Build query
     const query = {};
-    if (status && ['unreviewed', 'reviewed', 'posted'].includes(status)) {
+    if (status && ['unreviewed', 'reviewed', 'batched', 'posted'].includes(status)) {
       query.status = status;
     }
     if (branch) {
@@ -440,6 +443,8 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 
     await form.save();
 
+    logAudit({ action: 'form_update', userId: req.user._id, userName: req.user.name, resource: 'Form', resourceId: String(form._id), ipAddress: req.ip, details: `Form updated: ${form.branch} - ${form.month}`, metadata: { branch: form.branch, month: form.month } });
+
     res.json({
       success: true,
       message: 'Form updated successfully',
@@ -458,7 +463,7 @@ router.patch('/:id', authMiddleware, async (req, res) => {
 // @route   POST /api/forms/:id/post
 // @desc    Post form to Sage and generate batch file
 // @access  Private
-router.post('/:id/post', authMiddleware, async (req, res) => {
+router.post('/:id/post-to-sage', authMiddleware, async (req, res) => {
   try {
     const form = await Form.findById(req.params.id);
     
@@ -469,41 +474,73 @@ router.post('/:id/post', authMiddleware, async (req, res) => {
       });
     }
 
-    // Check if already posted
-    if (form.status === 'posted' && !req.body.force) {
+    if (form.status === 'posted' || form.status === 'batched') {
       return res.status(400).json({
         success: false,
-        message: 'Form already posted. Use force=true to regenerate batch file.'
+        message: 'Form is already posted or batched.'
       });
     }
 
-    // Generate batch file 
-    const batchResult = await createBatch(form);
+    let isFallback = false;
+    let fallbackBatchResult = null;
+    let sageBatchRef = null;
+
+    try {
+      const sageResult = await postJournalsToSage([form]);
+      sageBatchRef = sageResult.sageBatchRef;
+    } catch (sageError) {
+      console.error(`Direct Sage Posting failed for form ${form._id}, triggering fallback...`, sageError);
+      isFallback = true;
+      fallbackBatchResult = await createBatch(form); // Uses existing single form createBatch
+    }
+
+    if (isFallback) {
+      form.status = 'batched';
+      form.batchedAt = new Date();
+      form.batchId = fallbackBatchResult.batchId;
+      form.batchFileUrl = fallbackBatchResult.url;
+    } else {
+      form.status = 'posted';
+      form.postedAt = new Date();
+      form.sageBatchRef = sageBatchRef;
+    }
     
-    // Update form status
-    form.status = 'posted';
-    form.postedAt = new Date();
-    form.batchFileUrl = batchResult.url;
     await form.save();
+
+    const auditAction = isFallback ? 'form_post_sage_fallback' : 'form_post_sage';
+    const auditStatus = isFallback ? 'warning' : 'success';
+    logAudit({ action: auditAction, userId: req.user._id, userName: req.user.name, resource: 'Form', resourceId: String(form._id), ipAddress: req.ip, status: auditStatus, details: `${isFallback ? 'Sage fallback (CSV)' : 'Posted to Sage'}: ${form.branch} - ${form.month}`, metadata: { branch: form.branch, month: form.month } });
+
+    if (isFallback) {
+      return res.json({
+        success: false,
+        isFallback: true,
+        message: 'Direct posting to Sage failed. A CSV batch file has been generated.',
+        data: {
+          form,
+          batchFile: {
+            filename: fallbackBatchResult.filename,
+            url: fallbackBatchResult.url,
+            downloadUrl: `${req.protocol}://${req.get('host')}${fallbackBatchResult.url}`
+          }
+        }
+      });
+    }
 
     res.json({
       success: true,
-      message: 'Form posted successfully. Batch file generated.',
+      message: 'Form successfully posted directly to Sage!',
       data: {
         form,
-        batchFile: {
-          filename: batchResult.filename,
-          url: batchResult.url,
-          downloadUrl: `${req.protocol}://${req.get('host')}${batchResult.url}`
-        }
+        sageBatchRef
       }
     });
 
   } catch (error) {
-    console.error('Post form error:', error);
+    console.error('Post to Sage error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error posting form',
+      message: 'Server error posting form to Sage',
       error: error.message
     });
   }
@@ -595,6 +632,10 @@ router.post('/bulk/post-to-sage', authMiddleware, async (req, res) => {
 
     const updateResult = await Form.bulkWrite(bulkOps);
 
+    const bulkAuditAction = isFallback ? 'form_bulk_post_sage_fallback' : 'form_bulk_post_sage';
+    const bulkAuditStatus = isFallback ? 'warning' : 'success';
+    logAudit({ action: bulkAuditAction, userId: req.user._id, userName: req.user.name, resource: 'Form', ipAddress: req.ip, status: bulkAuditStatus, details: `Bulk ${isFallback ? 'fallback CSV' : 'Sage post'}: ${eligibleForms.length} forms`, metadata: { formCount: eligibleForms.length } });
+
     if (isFallback) {
       return res.json({
         success: false, // Return false to indicate Sage posting failed, triggering frontend fallback UI
@@ -665,7 +706,11 @@ router.delete('/:id', authMiddleware, requireAdmin, async (req, res) => {
       }
     }
 
+    const formBranch = form.branch;
+    const formMonth = form.month;
     await form.deleteOne();
+
+    logAudit({ action: 'form_delete', userId: req.user._id, userName: req.user.name, resource: 'Form', resourceId: req.params.id, ipAddress: req.ip, details: `Form deleted: ${formBranch} - ${formMonth}`, metadata: { branch: formBranch, month: formMonth } });
 
     res.status(204).send();
 
